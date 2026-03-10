@@ -1,0 +1,103 @@
+{
+  "projectType": "saas",
+  "projectName": "Sistema de Abogados",
+  "projectDescription": "A comprehensive case management system for law firms to manage clients, legal cases, conciliation processes, documents, and activities.",
+  "theme": "linden",
+  "primaryColor": "#3B82F6",
+  "lightColor": "#60A5FA",
+  "darkColor": "#1E40AF",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "configuration"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/client-management",
+              "features/case-management",
+              "features/conciliation-process",
+              "features/document-management",
+              "features/calendar-activities"
+            ]
+          },
+          {
+            "group": "User Management",
+            "pages": [
+              "users/roles-permissions",
+              "users/user-types",
+              "users/authentication"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/creating-cases",
+              "guides/managing-expedientes",
+              "guides/document-uploads",
+              "guides/scheduling-activities"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Models",
+            "pages": [
+              "api/models/cliente",
+              "api/models/casos",
+              "api/models/expedientes",
+              "api/models/actividad"
+            ]
+          },
+          {
+            "group": "Controllers",
+            "pages": [
+              "api/controllers/casos-controller",
+              "api/controllers/expediente-controller",
+              "api/controllers/cliente-controller"
+            ]
+          },
+          {
+            "group": "Routes",
+            "pages": [
+              "api/routes/web-routes",
+              "api/routes/auth-routes"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Client Management with DNI/RUC validation",
+    "Legal Case (Casos) tracking and management",
+    "Conciliation Process (Expedientes) with document handling",
+    "Document upload and management system",
+    "Calendar and activity scheduling with FullCalendar integration",
+    "Role-based access control (Admin, Encargado, Asistente, Abogado)",
+    "Search functionality with Laravel Scout",
+    "Dashboard with ChartJS analytics"
+  ],
+  "publicApiSurface": [
+    "ClienteController: index, create, store, show, edit, update, destroy, search",
+    "CasosController: index, create, store, show, edit, update, destroy, assignProceso, removeProceso",
+    "ExpedienteController: index, create, store, show, edit, update, destroy, assignSubmateria, removeSubmateria",
+    "ActividadController: index, create, store, edit, update, destroy",
+    "CalendarController: index",
+    "User Management: RoleController, PermissionController, UserController",
+    "ConciliadorController: index, create, store",
+    "SubmateriaController: index, create, edit, update, destroy",
+    "Document Controllers: ExpedienteDocumentosController, CasoDocumentoController"
+  ]
+}
