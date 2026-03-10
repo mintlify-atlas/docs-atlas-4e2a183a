@@ -1,0 +1,365 @@
+---
+title: 'Document Uploads'
+description: 'Guide for uploading, managing, and organizing documents for cases and expedientes'
+icon: 'file-arrow-up'
+---
+
+## Overview
+
+The Sistema de Abogados allows you to upload, store, and manage PDF documents for both cases (Casos) and expedientes (conciliation files). Documents are organized separately for each case or expediente, making it easy to maintain a complete file for each matter.
+
+## Document Storage Structure
+
+Documents are stored in different locations based on their type:
+
+- **Case Documents**: Stored in `public/documentoCaso/`
+- **Expediente Documents**: Stored in `public/documento/`
+
+Each document is assigned a unique UUID for secure access and download links.
+
+<Note>
+  All uploaded documents must be in PDF format with a maximum file size of 15MB (15,200KB).
+</Note>
+
+## Uploading Case Documents
+
+<Steps>
+  <Step title="Navigate to Case">
+    Open the case where you want to upload a document at `/caso/caso/{id}`.
+  </Step>
+
+  <Step title="Access Upload Form">
+    Click "Upload Document" or navigate to `/caso/caso/{id}/file`.
+  </Step>
+
+  <Step title="Select Document Type">
+    Choose the document type from the dropdown:
+    - Contract
+    - Evidence
+    - Court Filing
+    - Correspondence
+    - Other legal documents
+  </Step>
+
+  <Step title="Add Description (Optional)">
+    Provide a brief description of the document's content or purpose.
+  </Step>
+
+  <Step title="Choose PDF File">
+    Click "Choose File" and select a PDF document from your computer.
+    
+    **File requirements**:
+    - Format: PDF only
+    - Maximum size: 15MB (15,200KB)
+  </Step>
+
+  <Step title="Upload Document">
+    Click "Upload" or "Guardar" to store the document. Success message: "Documento registrado correctamente."
+  </Step>
+</Steps>
+
+### Case Document Validation
+
+```php
+'tipo_documento' => 'required',
+'descripcion' => 'nullable',
+'documento' => ['required', 'mimes:pdf', 'max:15200']
+```
+
+<Warning>
+  Only PDF files are accepted. Attempting to upload other file types (Word, images, etc.) will result in a validation error.
+</Warning>
+
+## Uploading Expediente Documents
+
+Expediente documents have additional metadata fields specific to conciliation proceedings.
+
+<Steps>
+  <Step title="Open Expediente">
+    Navigate to the expediente at `/conciliacion/expediente/{id}`.
+  </Step>
+
+  <Step title="Access Upload Form">
+    Click "Upload Document" or go to `/conciliacion/expediente/{id}/file`.
+  </Step>
+
+  <Step title="Select Document Type">
+    Choose the appropriate document type for conciliation files.
+  </Step>
+
+  <Step title="Add Acta Information (Optional)">
+    For meeting minutes and actas, you can specify:
+    - **Acta Type** (`tipo_acta`): Type of meeting record
+    - **Acta Number** (`n_acta`): Sequential number for the acta
+    - **Folio** (`folio`): Page or folio reference number
+  </Step>
+
+  <Step title="Add Description">
+    Provide details about the document content.
+  </Step>
+
+  <Step title="Upload PDF">
+    Select and upload the PDF file (max 15MB).
+  </Step>
+
+  <Step title="Submit">
+    Click "Upload" to save. Confirmation: "Documento registrado correctamente."
+  </Step>
+</Steps>
+
+### Expediente Document Validation
+
+```php
+'tipo_documento' => 'required',
+'tipo_acta' => 'nullable',
+'n_acta' => 'nullable',
+'folio' => 'nullable',
+'descripcion' => 'nullable',
+'documento' => ['required', 'mimes:pdf', 'max:15200']
+```
+
+<Tip>
+  Use the acta fields to maintain organized records of conciliation meetings and proceedings.
+</Tip>
+
+## Viewing Documents
+
+You can view documents directly in your browser without downloading them.
+
+<Steps>
+  <Step title="Locate Document">
+    Go to the case or expediente detail page where the document is stored.
+  </Step>
+
+  <Step title="Click View">
+    Click the "View" or eye icon next to the document name.
+  </Step>
+
+  <Step title="View in Browser">
+    The PDF will open in a new tab or browser window for viewing.
+  </Step>
+</Steps>
+
+**View Routes**:
+- Case documents: `/caso/file/{uuid}`
+- Expediente documents: `/conciliacion/expediente/file/{uuid}`
+
+## Downloading Documents
+
+Download documents to save them locally on your computer.
+
+<Steps>
+  <Step title="Find Document">
+    Navigate to the case or expediente containing the document.
+  </Step>
+
+  <Step title="Click Download">
+    Click the "Download" button or download icon next to the document.
+  </Step>
+
+  <Step title="Save File">
+    The PDF will download to your default downloads folder.
+  </Step>
+</Steps>
+
+**Download Routes**:
+- Case documents: `/caso/file/download/{uuid}`
+- Expediente documents: `/conciliacion/expediente/file/download/{uuid}`
+
+<Note>
+  Documents are accessed securely using UUID identifiers rather than sequential IDs, preventing unauthorized access.
+</Note>
+
+## Editing Document Metadata
+
+You can update document information without re-uploading the file.
+
+<Steps>
+  <Step title="Navigate to Document">
+    Go to the case or expediente detail page.
+  </Step>
+
+  <Step title="Click Edit">
+    Click the "Edit" button next to the document.
+  </Step>
+
+  <Step title="Update Information">
+    Modify the document type, description, acta details, or other metadata.
+  </Step>
+
+  <Step title="Optionally Replace File">
+    If needed, upload a new PDF file to replace the existing document.
+    
+    <Warning>
+      When replacing a file, the old PDF is automatically deleted from the server.
+    </Warning>
+  </Step>
+
+  <Step title="Save Changes">
+    Submit the form. Confirmation: "Documento Actualisado correctamente."
+  </Step>
+</Steps>
+
+### File Replacement Process
+
+When you upload a new file during editing:
+
+1. The system checks if the old file exists
+2. The old file is deleted from the server
+3. The new file is uploaded with a timestamp prefix
+4. The database record is updated with the new filename
+
+## Deleting Documents
+
+<Warning>
+  Deleting a document is permanent. The file will be removed from both the database and file system.
+</Warning>
+
+<Steps>
+  <Step title="Locate Document">
+    Find the document in the case or expediente details.
+  </Step>
+
+  <Step title="Click Delete">
+    Click the delete or trash icon for the document.
+  </Step>
+
+  <Step title="Confirm Deletion">
+    Confirm that you want to permanently delete the document.
+  </Step>
+
+  <Step title="Document Removed">
+    The file is deleted from storage and the database. Message: "Documento eliminado correctamente."
+  </Step>
+</Steps>
+
+### What Happens During Deletion
+
+1. System checks if the file exists on disk
+2. Physical file is deleted from `documentoCaso/` or `documento/` directory
+3. Database record is removed
+4. Confirmation message is displayed
+
+## File Naming Convention
+
+The system automatically generates unique filenames using timestamps:
+
+```
+timestamp_originalfilename.pdf
+```
+
+Example: `1709998234_contract_signed.pdf`
+
+This prevents filename conflicts and maintains original filename information.
+
+<Tip>
+  Use descriptive original filenames before uploading to make documents easier to identify later.
+</Tip>
+
+## Document Organization Best Practices
+
+### For Cases
+
+- **Categorize Properly**: Use consistent document types for similar documents
+- **Descriptive Names**: Name files clearly before uploading (e.g., "plaintiff_complaint.pdf" instead of "doc1.pdf")
+- **Add Descriptions**: Always add a brief description explaining the document's relevance
+- **Upload Chronologically**: Upload documents in the order they were created or received
+- **Regular Reviews**: Periodically review and archive old documents
+
+### For Expedientes
+
+- **Use Acta Numbers**: Assign sequential acta numbers for meeting minutes
+- **Track Folios**: Use folio numbers to maintain page references
+- **Type Classification**: Properly categorize document types for easy filtering
+- **Meeting Documentation**: Upload meeting minutes immediately after sessions
+- **Version Control**: When updating documents, use clear version indicators in descriptions
+
+## File Security
+
+### Access Control
+
+- Documents are only accessible to authenticated users with appropriate roles
+- UUID-based URLs prevent unauthorized enumeration of documents
+- Case documents require `encargado`, `admin`, or `abogado` role
+- Expediente documents require `encargado`, `admin`, or `asistente` role
+
+### Storage Security
+
+- Files are stored outside the web root when possible
+- Direct file access is controlled through application routes
+- File existence checks prevent information disclosure
+- Automatic cleanup when documents are deleted
+
+## Troubleshooting
+
+### Upload Fails
+
+**Problem**: Document upload returns an error
+
+**Solutions**:
+- Verify file is PDF format
+- Check file size is under 15MB
+- Ensure you have proper permissions
+- Check available disk space on server
+
+### Cannot View Document
+
+**Problem**: PDF won't open in browser
+
+**Solutions**:
+- Try downloading instead of viewing
+- Check browser PDF viewer settings
+- Ensure file was uploaded successfully
+- Verify UUID is correct in the URL
+
+### File Size Too Large
+
+**Problem**: Error about file exceeding maximum size
+
+**Solutions**:
+- Compress the PDF using online tools
+- Split large documents into smaller files
+- Remove unnecessary images or pages
+- Contact administrator to increase upload limit
+
+## Technical Reference
+
+### Case Documents
+
+**Controller**: `CasoDocumentoController.php`
+
+**Routes**:
+- Upload form: `GET /caso/caso/{caso}/file`
+- Store document: `POST /caso/caso/{caso}`
+- Edit form: `GET /caso/file/{file}/edit`
+- Update document: `PUT /caso/{file}/file`
+- Delete document: `DELETE /caso/{caso}/file`
+- View document: `GET /caso/file/{uuid}`
+- Download document: `GET /caso/file/download/{uuid}`
+
+**Model**: `CasoDocumento`
+
+**Storage Path**: `public/documentoCaso/`
+
+### Expediente Documents
+
+**Controller**: `ExpedienteDocumentosController.php`
+
+**Routes**:
+- Upload form: `GET /conciliacion/expediente/{expediente}/file`
+- Store document: `POST /conciliacion/expediente/{expediente}`
+- Edit form: `GET /conciliacion/expediente/file/{file}/edit`
+- Update document: `PUT /conciliacion/expediente/{file}/file`
+- Delete document: `DELETE /conciliacion/expediente/{expediente}/file`
+- View document: `GET /conciliacion/expediente/file/{uuid}`
+- Download document: `GET /conciliacion/expediente/file/download/{uuid}`
+
+**Model**: `ExpedienteDocumento`
+
+**Storage Path**: `public/documento/`
+
+## Related Resources
+
+- [Creating Cases](/guides/creating-cases)
+- [Managing Expedientes](/guides/managing-expedientes)
+- [Scheduling Activities](/guides/scheduling-activities)

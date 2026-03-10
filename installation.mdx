@@ -1,0 +1,392 @@
+---
+title: 'Installation'
+description: 'Complete guide to installing Sistema de Abogados'
+---
+
+## System Requirements
+
+Before installing Sistema de Abogados, ensure your system meets the following requirements:
+
+<CardGroup cols={2}>
+  <Card title="PHP" icon="php">
+    Version 8.0.2 or higher
+  </Card>
+  <Card title="Composer" icon="box">
+    Latest version for dependency management
+  </Card>
+  <Card title="MySQL" icon="database">
+    Version 5.7 or higher / MariaDB 10.3+
+  </Card>
+  <Card title="Node.js" icon="node-js">
+    Version 14.x or higher with npm
+  </Card>
+</CardGroup>
+
+<Note>
+  Make sure you have **PHP extensions** enabled: OpenSSL, PDO, Mbstring, Tokenizer, XML, Ctype, JSON, BCMath
+</Note>
+
+## Installation Steps
+
+<Steps>
+  <Step title="Clone the Repository">
+    Clone the Sistema de Abogados repository to your local machine:
+
+    ```bash
+    git clone https://github.com/your-organization/sistema-abogados.git
+    cd sistema-abogados
+    ```
+  </Step>
+
+  <Step title="Install PHP Dependencies">
+    Install all required PHP dependencies using Composer:
+
+    ```bash
+    composer install
+    ```
+
+    This will install the following key packages:
+    
+    <AccordionGroup>
+      <Accordion title="Core Dependencies">
+        - **Laravel Framework 9.19+** - The PHP framework foundation
+        - **Laravel Sanctum 3.0+** - API authentication
+        - **Laravel Scout 10.0+** - Full-text search functionality
+        - **Laravel Tinker 2.7+** - Interactive REPL
+        - **Spatie Laravel Permission 5.9+** - Role and permission management
+        - **Guzzle HTTP 7.2+** - HTTP client library
+      </Accordion>
+      <Accordion title="Development Dependencies">
+        - **Laravel Breeze 1.18+** - Authentication scaffolding
+        - **Laravel Pint 1.0+** - Code style fixer
+        - **Pest 1.16+** - Testing framework
+        - **Faker** - Fake data generation
+        - **Laravel Lang Common 2.0+** - Language translations
+      </Accordion>
+    </AccordionGroup>
+  </Step>
+
+  <Step title="Install Node.js Dependencies">
+    Install frontend dependencies and compile assets:
+
+    <CodeGroup>
+      ```bash npm
+      npm install
+      ```
+
+      ```bash pnpm
+      pnpm install
+      ```
+
+      ```bash yarn
+      yarn install
+      ```
+    </CodeGroup>
+
+    Key frontend packages include:
+    - **Vite** - Modern build tool
+    - **Alpine.js** - Lightweight JavaScript framework
+    - **Tailwind CSS** - Utility-first CSS framework
+    - **SweetAlert2** - Beautiful alert popups
+  </Step>
+
+  <Step title="Configure Environment">
+    Copy the example environment file and configure it:
+
+    ```bash
+    cp .env.example .env
+    ```
+
+    <Warning>
+      You must configure the `.env` file before proceeding. See the [Configuration](/configuration) page for detailed information.
+    </Warning>
+
+    At minimum, set these variables:
+
+    ```bash .env
+    APP_NAME="Sistema de Abogados"
+    APP_URL=http://localhost:8000
+    
+    DB_CONNECTION=mysql
+    DB_HOST=127.0.0.1
+    DB_PORT=3306
+    DB_DATABASE=sesionv2
+    DB_USERNAME=root
+    DB_PASSWORD=your_password
+    ```
+  </Step>
+
+  <Step title="Generate Application Key">
+    Generate a unique application encryption key:
+
+    ```bash
+    php artisan key:generate
+    ```
+
+    This command sets the `APP_KEY` value in your `.env` file, which is used for encrypting user sessions and other encrypted data.
+  </Step>
+
+  <Step title="Create Database">
+    Create the MySQL database for the application:
+
+    <CodeGroup>
+      ```sql MySQL CLI
+      mysql -u root -p
+      CREATE DATABASE sesionv2 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      EXIT;
+      ```
+
+      ```bash MySQL Command
+      mysql -u root -p -e "CREATE DATABASE sesionv2 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+      ```
+    </CodeGroup>
+
+    <Note>
+      Make sure the database name matches the `DB_DATABASE` value in your `.env` file.
+    </Note>
+  </Step>
+
+  <Step title="Run Database Migrations">
+    Execute migrations to create all required database tables:
+
+    ```bash
+    php artisan migrate
+    ```
+
+    This will create tables for:
+    - Users and authentication (`users`, `password_resets`, `personal_access_tokens`)
+    - Roles and permissions (`roles`, `permissions`, `model_has_roles`, etc.)
+    - Application entities (`clientes`, `expedientes`, `actividades`, etc.)
+    - Additional features (conciliadores, documentos, and more)
+
+    <Warning>
+      If you need to reset the database and start fresh, use:
+      ```bash
+      php artisan migrate:fresh
+      ```
+      **This will delete all existing data!**
+    </Warning>
+  </Step>
+
+  <Step title="Seed the Database">
+    Populate the database with initial roles and an admin user:
+
+    ```bash
+    php artisan db:seed
+    ```
+
+    This will create:
+    
+    **Default Roles:**
+    - `admin` - Full system access
+    - `asistente` - Assistant role
+    - `abogado` - Lawyer role
+
+    **Default Admin User:**
+    - **Email:** `admin@pizarro.com`
+    - **Password:** `password`
+    - **Role:** Admin
+
+    <Warning>
+      **Change the default admin password immediately after first login!**
+    </Warning>
+
+    <Tip>
+      To run migrations and seeders in one command:
+      ```bash
+      php artisan migrate:fresh --seed
+      ```
+    </Tip>
+  </Step>
+
+  <Step title="Build Frontend Assets">
+    Compile the frontend assets for production or development:
+
+    <CodeGroup>
+      ```bash Development
+      npm run dev
+      ```
+
+      ```bash Production
+      npm run build
+      ```
+    </CodeGroup>
+
+    The development server will watch for changes and hot-reload automatically.
+  </Step>
+
+  <Step title="Configure Storage Permissions">
+    Set proper permissions for storage and cache directories:
+
+    <CodeGroup>
+      ```bash Linux/Mac
+      chmod -R 775 storage bootstrap/cache
+      chown -R www-data:www-data storage bootstrap/cache
+      ```
+
+      ```bash Development
+      chmod -R 777 storage bootstrap/cache
+      ```
+    </CodeGroup>
+
+    <Warning>
+      Using `777` permissions is **only acceptable in development environments**. Use proper user/group permissions in production.
+    </Warning>
+  </Step>
+
+  <Step title="Start the Application">
+    Start the Laravel development server:
+
+    ```bash
+    php artisan serve
+    ```
+
+    The application will be available at `http://localhost:8000`
+
+    <CodeGroup>
+      ```bash Custom Port
+      php artisan serve --port=8080
+      ```
+
+      ```bash Custom Host
+      php artisan serve --host=0.0.0.0 --port=8000
+      ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+## Post-Installation Steps
+
+### Configure Spatie Permissions
+
+The application uses Spatie Laravel Permission for role-based access control. After installation:
+
+1. The permission tables are automatically created via migrations
+2. Default roles are seeded (admin, asistente, abogado)
+3. Configure cache settings in `config/permission.php` if needed
+
+```bash
+php artisan permission:cache-reset
+```
+
+### Set Up Laravel Scout (Optional)
+
+If you plan to use search functionality:
+
+```bash
+# Publish Scout configuration
+php artisan vendor:publish --provider="Laravel\Scout\ScoutServiceProvider"
+
+# Index your models
+php artisan scout:import "App\Models\Cliente"
+php artisan scout:import "App\Models\Expediente"
+```
+
+See the [Configuration](/configuration) page for Scout driver options.
+
+### Configure Queue Workers (Optional)
+
+For background job processing:
+
+```bash
+# Run queue worker
+php artisan queue:work
+
+# With specific connection
+php artisan queue:work redis --queue=default
+```
+
+## Verification
+
+Verify your installation by checking:
+
+<Tabs>
+  <Tab title="Application Status">
+    ```bash
+    php artisan about
+    ```
+    
+    This displays your application environment, configuration, and Laravel version.
+  </Tab>
+  
+  <Tab title="Database Connection">
+    ```bash
+    php artisan migrate:status
+    ```
+    
+    Shows all migrations and their status.
+  </Tab>
+  
+  <Tab title="Route List">
+    ```bash
+    php artisan route:list
+    ```
+    
+    Displays all registered routes in the application.
+  </Tab>
+</Tabs>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="composer install fails">
+    **Solution:** Ensure you have PHP 8.0.2+ and all required extensions:
+    
+    ```bash
+    php -v
+    php -m | grep -E 'pdo|mbstring|xml|openssl'
+    ```
+  </Accordion>
+
+  <Accordion title="Migration errors">
+    **Solution:** Check database credentials in `.env` and ensure MySQL is running:
+    
+    ```bash
+    php artisan config:clear
+    php artisan migrate:status
+    ```
+  </Accordion>
+
+  <Accordion title="Permission denied errors">
+    **Solution:** Fix storage permissions:
+    
+    ```bash
+    sudo chown -R $USER:www-data storage bootstrap/cache
+    chmod -R 775 storage bootstrap/cache
+    ```
+  </Accordion>
+
+  <Accordion title="npm install fails">
+    **Solution:** Clear npm cache and try again:
+    
+    ```bash
+    npm cache clean --force
+    rm -rf node_modules package-lock.json
+    npm install
+    ```
+  </Accordion>
+
+  <Accordion title="Assets not loading">
+    **Solution:** Rebuild assets and clear cache:
+    
+    ```bash
+    npm run build
+    php artisan config:clear
+    php artisan cache:clear
+    php artisan view:clear
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+Now that you have installed Sistema de Abogados, proceed to:
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="gear" href="/configuration">
+    Configure environment variables and services
+  </Card>
+  <Card title="User Guide" icon="book" href="/user-guide">
+    Learn how to use the system features
+  </Card>
+</CardGroup>

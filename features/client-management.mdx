@@ -1,0 +1,282 @@
+---
+title: 'Client Management'
+description: 'Manage your law firm clients with comprehensive contact information, search capabilities, and relationship tracking'
+icon: 'users'
+---
+
+## Overview
+
+The Client Management system is the foundation of Sistema de Abogados, allowing your firm to maintain detailed records of all clients, their contact information, and their association with legal cases and conciliation processes (expedientes). With powerful search capabilities powered by Laravel Scout, you can quickly find and access client information whenever you need it.
+
+<CardGroup cols={2}>
+  <Card title="Centralized Client Database" icon="database">
+    Store all client information in one secure location with full details including personal data, company information, and contact details.
+  </Card>
+  <Card title="Advanced Search" icon="magnifying-glass">
+    Quickly find clients using Laravel Scout's full-text search across names, DNI/RUC, company names, emails, and phone numbers.
+  </Card>
+  <Card title="Relationship Tracking" icon="link">
+    View all cases (casos) and expedientes associated with each client in one centralized profile.
+  </Card>
+  <Card title="Role-Based Access" icon="shield">
+    Secure access control ensures only authorized team members (encargado, admin, asistente, abogado) can manage client data.
+  </Card>
+</CardGroup>
+
+## Client Data Structure
+
+Each client record contains comprehensive information organized into the following fields:
+
+### Personal Information
+
+| Field | Description | Required |
+|-------|-------------|----------|
+| **nombre** | Client's first name | Yes |
+| **apellidos** | Client's last name(s) | Yes |
+| **genero** | Gender | Optional |
+| **dni_ruc** | National ID (DNI) or Tax ID (RUC) for identification | Yes |
+
+### Company Information
+
+| Field | Description | Required |
+|-------|-------------|----------|
+| **empresa** | Company name if the client represents a business | Optional |
+
+### Contact Details
+
+| Field | Description | Required |
+|-------|-------------|----------|
+| **email** | Email address for electronic communication | Optional |
+| **telefono** | Phone number for direct contact | Optional |
+| **direccion** | Physical address | Optional |
+| **referencia** | Additional location reference or notes | Optional |
+
+### Status
+
+| Field | Description | Required |
+|-------|-------------|----------|
+| **estado_cliente** | Current status of the client (Active, Inactive, etc.) | Yes |
+
+<Note>
+The `dni_ruc` field is crucial for client identification and is indexed in the search system. Ensure this information is accurate and up-to-date.
+</Note>
+
+## Creating a New Client
+
+To add a new client to your system:
+
+1. **Navigate to Clients Section**
+   - Access the clients module from the main navigation
+   - Available at route: `/clientes`
+
+2. **Click "Create New Client"**
+   - Opens the client creation form
+
+3. **Enter Required Information**
+   - Fill in the client's name and apellidos
+   - Enter their DNI or RUC number
+   - Set the initial client status
+
+4. **Add Optional Details**
+   - Company information if applicable
+   - Contact details (email, phone, address)
+   - Location references for easy site visits
+
+5. **Save the Client Record**
+   - The system validates all required fields
+   - Upon success, the client is added to the database
+   - Client becomes immediately searchable
+
+<Tip>
+Add as much contact information as possible during client creation. This ensures your team can reach clients through multiple channels when needed.
+</Tip>
+
+## Searching for Clients
+
+The search functionality uses Laravel Scout to provide fast, accurate results:
+
+### Search Capabilities
+
+The system searches across the following fields:
+- Client name (`nombre`)
+- Last name(s) (`apellidos`)
+- DNI/RUC (`dni_ruc`)
+- Company name (`empresa`)
+- Email address (`email`)
+- Phone number (`telefono`)
+- Physical address (`direccion`)
+
+### How to Search
+
+1. **Enter Search Terms**
+   - Type any part of the client's information in the search box
+   - Search is case-insensitive and supports partial matches
+
+2. **View Results**
+   - Results appear as paginated list (5 clients per page)
+   - Each result shows key client information
+
+3. **Access Client Details**
+   - Click on any client to view their full profile
+
+<Note>
+Search results are automatically updated as you type. The system uses efficient indexing to provide results even with large client databases.
+</Note>
+
+## Viewing Client Details
+
+The client detail view provides a comprehensive overview:
+
+### Client Profile
+- Complete personal and contact information
+- Current status
+- Company affiliations
+
+### Associated Cases
+View all legal cases (casos) linked to this client:
+- Case numbers and titles
+- Case status and dates
+- Quick access to case details
+
+### Associated Expedientes
+View all conciliation expedientes for this client:
+- Expediente numbers
+- Current status
+- Related submaterias (subject matters)
+- Quick navigation to expediente details
+
+<Tip>
+The client detail page is your one-stop view for understanding all legal matters involving a specific client. Use it to prepare for meetings or get a quick overview of the client relationship.
+</Tip>
+
+## Editing Client Information
+
+Keep client information current by updating records:
+
+1. **Access Edit Mode**
+   - Navigate to the client's profile
+   - Click the "Edit" button
+
+2. **Update Information**
+   - Modify any field as needed
+   - All fields maintain the same validation rules
+
+3. **Save Changes**
+   - The system validates updated information
+   - Success message confirms the update
+
+<Warning>
+Changing a client's DNI/RUC may affect search indexing. The system will automatically reindex the client record, but consider the implications if this identifier is used in external systems.
+</Warning>
+
+## Deleting Clients
+
+Client deletion is protected to maintain data integrity:
+
+### Deletion Protection
+- Clients **cannot be deleted** if they have associated expedientes
+- Clients **cannot be deleted** if they have associated casos
+- This prevents orphaned legal records
+
+### Delete Process
+
+1. **Attempt Deletion**
+   - Navigate to the client's profile
+   - Click the "Delete" button
+
+2. **System Verification**
+   - System checks for associated records
+   - If associations exist, deletion is blocked with an error message
+
+3. **Successful Deletion**
+   - Only clients with no associations can be deleted
+   - Confirmation message displayed
+   - Client removed from search index
+
+<Warning>
+Before deleting a client, ensure all their cases and expedientes are properly closed or reassigned. The system will prevent deletion if any active associations exist.
+</Warning>
+
+## Role-Based Access Control
+
+Client management is available to the following roles:
+
+| Role | Access Level |
+|------|-------------|
+| **Encargado** (Manager) | Full access - create, view, edit, delete |
+| **Admin** | Full access - create, view, edit, delete |
+| **Asistente** (Assistant) | Full access - create, view, edit, delete |
+| **Abogado** (Lawyer) | Full access - create, view, edit, delete |
+
+<Note>
+All four main roles have equal access to client management features. This ensures that any team member working on legal matters can access and update client information as needed.
+</Note>
+
+## Integration with Other Modules
+
+Client records serve as the foundation for other system modules:
+
+### Cases (Casos)
+- Each case must be associated with a client
+- The relationship is defined via `id_cliente` foreign key
+- View all client cases from the client detail page
+
+### Expedientes (Conciliation Processes)
+- Each expediente must be associated with a client
+- The relationship is defined via `id_cliente` foreign key
+- View all client expedientes from the client detail page
+
+### Search Consistency
+- Client search is consistent with search in Cases and Expedientes
+- All modules use Laravel Scout for unified search experience
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Keep Contact Information Current">
+    Regularly update client email addresses, phone numbers, and physical addresses. This ensures your team can always reach clients when needed for case updates, meetings, or document requests.
+  </Accordion>
+
+  <Accordion title="Use Consistent DNI/RUC Format">
+    Establish a standard format for entering DNI and RUC numbers. This improves search accuracy and prevents duplicate client records.
+  </Accordion>
+
+  <Accordion title="Add Company Information When Applicable">
+    If a client represents a company, always fill in the empresa field. This helps distinguish between individual and corporate clients.
+  </Accordion>
+
+  <Accordion title="Utilize the Reference Field">
+    Use the referencia field to add location landmarks or special instructions for reaching the client's address. This is especially helpful for assistants scheduling site visits.
+  </Accordion>
+
+  <Accordion title="Monitor Client Status">
+    Regularly review and update the estado_cliente field to reflect the current relationship status. This helps in reporting and client relationship management.
+  </Accordion>
+</AccordionGroup>
+
+## Technical Implementation
+
+For developers and system administrators:
+
+### Model Location
+`app/Models/Cliente.php`
+
+### Controller
+`app/Http/Controllers/ClienteController.php`
+
+### Routes
+- List clients: `GET /clientes`
+- Create client: `POST /clientes`
+- View client: `GET /clientes/{cliente}`
+- Edit client: `PUT /clientes/{cliente}`
+- Delete client: `DELETE /clientes/{cliente}`
+
+### Database Table
+`clientes`
+
+### Search Implementation
+Laravel Scout with the `Searchable` trait enables full-text search across multiple fields defined in the `toSearchableArray()` method.
+
+### Relationships
+- **HasMany**: `expedientes` - One client can have multiple expedientes
+- **HasMany**: `casos` - One client can have multiple cases

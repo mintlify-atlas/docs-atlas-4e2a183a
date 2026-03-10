@@ -1,0 +1,512 @@
+---
+title: 'Conciliation Process (Expedientes)'
+description: 'Manage conciliation expedientes with submaterias, invited parties, conciliators, and complete process tracking'
+icon: 'handshake'
+---
+
+## Overview
+
+The Expediente module manages conciliation processes - alternative dispute resolution procedures where parties attempt to reach settlement through mediation. Each expediente tracks the complete conciliation lifecycle, including subject matters (submaterias), invited parties (invitados), assigned conciliators, related documents, and scheduled activities.
+
+<CardGroup cols={2}>
+  <Card title="Comprehensive Process Tracking" icon="list-timeline">
+    Track expedientes from initiation through resolution with complete details including expediente numbers, dates, descriptions, and status.
+  </Card>
+  <Card title="Subject Matter Classification" icon="tags">
+    Assign multiple submaterias to categorize the subject areas and legal topics involved in the conciliation.
+  </Card>
+  <Card title="Party Management" icon="users">
+    Track all invited parties participating in the conciliation process with complete contact and role information.
+  </Card>
+  <Card title="Conciliator Assignment" icon="user-tie">
+    Assign professional conciliators to facilitate negotiations and maintain neutrality in the resolution process.
+  </Card>
+</CardGroup>
+
+## Expediente Data Structure
+
+Each expediente record contains:
+
+| Field | Description | Required |
+|-------|-------------|----------|
+| **n_expediente** | Unique expediente number or identifier | Yes |
+| **fecha_inicio** | Expediente start date | Yes |
+| **fecha_final** | Completion or closing date | Optional |
+| **descripcion** | Detailed description of the conciliation matter | Optional |
+| **estado** | Current expediente status | Yes |
+| **id_cliente** | Associated client ID (foreign key) | Yes |
+
+<Note>
+The `n_expediente` field serves as the primary identifier and is indexed for search. Establish a consistent numbering scheme to distinguish expedientes from casos.
+</Note>
+
+## Creating a New Expediente
+
+Follow these steps to initiate a conciliation process:
+
+1. **Navigate to Expedientes Module**
+   - Access via route: `/conciliacion/expediente`
+   - Click "Create New Expediente"
+
+2. **Select Client**
+   - Choose the requesting client from the dropdown
+   - All active clients are available for selection
+
+3. **Enter Expediente Details**
+   - **Expediente Number** (`n_expediente`): Enter unique identifier
+   - **Start Date** (`fecha_inicio`): Set when conciliation begins
+   - **End Date** (`fecha_final`): Optional, set when process concludes
+   - **Description**: Add detailed information about the dispute
+   - **Status** (`estado`): Set initial status (typically "Active" or "Initiated")
+
+4. **Save the Expediente**
+   - System validates required fields
+   - Expediente is created and becomes searchable
+   - Redirects to expediente detail view for additional configuration
+
+<Tip>
+Create expedientes immediately upon receiving a conciliation request. This enables proper tracking from the first contact with opposing parties.
+</Tip>
+
+## Expediente Detail View
+
+The comprehensive detail page provides access to all expediente-related information:
+
+### Basic Information Section
+- Expediente number and current status
+- Client information with link to profile
+- Start and end dates
+- Complete description
+
+### Submaterias (Subject Matters)
+- View all assigned subject matter categories
+- Add new submaterias
+- Remove submaterias when no longer applicable
+
+### Invited Parties (Invitados)
+- List all parties invited to participate
+- Add new invitados
+- View complete contact information
+- Remove invitados if they withdraw
+
+### Conciliators (Conciliadores)
+- View assigned conciliators
+- Assign new conciliators
+- Remove conciliator assignments
+- Access conciliator contact information
+
+### Expediente Documents
+- Access all documents attached to the expediente
+- Upload new documents with metadata
+- Download and view documents
+- Manage document organization
+
+### Related Activities
+- View scheduled conciliation sessions
+- Access hearing dates and times
+- Link to calendar module for activity management
+
+## Managing Submaterias
+
+Submaterias categorize the legal subjects involved in the conciliation:
+
+### What are Submaterias?
+
+Submaterias represent specific areas of law or dispute topics, such as:
+- Contract disputes
+- Labor issues
+- Property conflicts
+- Family matters
+- Consumer complaints
+- Neighborhood disputes
+
+### Assignment Process
+
+1. **Access Expediente Detail**
+   - Navigate to the specific expediente
+
+2. **Assign Submateria**
+   - In the Submaterias section, click "Assign Subject Matter"
+   - Select from available submaterias in the catalog
+   - Submit the assignment
+
+3. **View Assigned Submaterias**
+   - All assigned submaterias display in a list
+   - Each shows the submateria name and category
+
+4. **Remove Submateria**
+   - Click "Remove" next to any submateria
+   - Confirmation message displays
+   - Relationship is deleted (submateria remains in catalog)
+
+<Note>
+Multiple submaterias can be assigned to a single expediente. This is common in complex disputes involving several legal areas.
+</Note>
+
+### Managing the Submaterias Catalog
+
+Create and maintain submaterias:
+- Access catalog at `/conciliacion/submaterias`
+- Create new submaterias as needed
+- Edit existing submateria names
+- Delete unused submaterias
+- Submaterias can be reused across multiple expedientes
+
+## Managing Invited Parties (Invitados)
+
+Track all parties participating in the conciliation:
+
+### Invitado Information Structure
+
+Each invited party record includes:
+- Full name
+- DNI/RUC identification
+- Company affiliation (if applicable)
+- Email address
+- Phone number
+- Physical address
+- Location references
+- Role in the dispute
+
+### Adding Invitados to Expediente
+
+1. **Create or Select Invitado**
+   - First, ensure the invitado exists in the system
+   - Create new invitados via `/conciliacion/invitado`
+   - Or select existing invitado from the database
+
+2. **Assign to Expediente**
+   - From expediente detail page, go to Invitados section
+   - Click "Assign Invited Party"
+   - Select invitado from dropdown
+   - Submit the assignment
+
+3. **View Invitado Details**
+   - All assigned invitados display with contact information
+   - Access full party details for communication
+
+4. **Remove Invitado Assignment**
+   - Click "Remove" to unassign invitado from expediente
+   - This doesn't delete the invitado record
+   - Only removes the relationship to this expediente
+
+<Tip>
+Maintain accurate contact information for all invitados. This ensures your team can reach parties for scheduling sessions and sending notifications.
+</Tip>
+
+### Managing the Invitados Catalog
+
+- Access at `/conciliacion/invitado`
+- Create new invited party records
+- Update contact information as needed
+- Search for existing invitados before creating duplicates
+- Invitados can participate in multiple expedientes
+
+## Managing Conciliators (Conciliadores)
+
+Assign professional conciliators to facilitate the process:
+
+### What is a Conciliator?
+
+Conciliators are neutral third parties who:
+- Facilitate discussions between disputing parties
+- Help parties explore settlement options
+- Maintain impartiality throughout the process
+- Guide parties toward mutually acceptable resolutions
+- Document agreements reached
+
+### Conciliator Information
+
+Each conciliador record includes:
+- Full name and credentials
+- Professional registration number
+- Contact information
+- Specialization areas
+- Availability
+
+### Assigning Conciliators
+
+1. **Access Expediente Detail**
+   - Navigate to the specific expediente
+
+2. **Assign Conciliator**
+   - In the Conciliadores section, click "Assign Conciliator"
+   - Select from registered conciliators
+   - Submit the assignment
+
+3. **View Assignment**
+   - Assigned conciliators display with contact details
+   - Access conciliator credentials and specializations
+
+4. **Remove Assignment**
+   - Click "Remove" if conciliator needs to be replaced
+   - Relationship is deleted (conciliator remains in system)
+
+<Note>
+Multiple conciliators can be assigned to complex or high-value disputes. The system supports co-facilitation arrangements.
+</Note>
+
+### Managing the Conciliadores Catalog
+
+- Access at `/conciliacion/conciliador`
+- Register new conciliators
+- Update professional information
+- Track conciliator assignments and workload
+- Maintain credentials and certifications
+
+## Searching Expedientes
+
+Quickly find expedientes using integrated search:
+
+### Search Functionality
+
+Search operates across:
+- Expediente number (`n_expediente`)
+- Status (`estado`)
+
+### Search Process
+
+1. **Enter Search Terms**
+   - Type expediente number or status in search box
+   - Search is case-insensitive with partial matching
+
+2. **View Results**
+   - Results display in paginated format (5 per page)
+   - Each result shows expediente number, client, and status
+
+3. **Access Details**
+   - Click any result to view complete expediente information
+
+<Tip>
+Use partial expediente numbers for broader searches. The Laravel Scout integration provides fast results even with incomplete information.
+</Tip>
+
+## Editing Expedientes
+
+Update expediente information as the process progresses:
+
+1. **Access Edit Mode**
+   - From expediente detail page, click "Edit"
+
+2. **Update Fields**
+   - Modify any field including status, dates, description
+   - Client assignment can be changed if necessary
+
+3. **Save Changes**
+   - All fields are revalidated
+   - Success message confirms update
+   - Changes are immediately searchable
+
+<Note>
+Regularly update the expediente status to reflect the current stage of conciliation. This helps team coordination and reporting.
+</Note>
+
+## Expediente Status Management
+
+The `estado` field tracks the conciliation lifecycle:
+
+### Common Status Values
+
+- **Initiated**: Conciliation request received, process starting
+- **Active**: Sessions scheduled and ongoing
+- **In Progress**: Parties are negotiating
+- **Agreement Reached**: Parties have settled
+- **No Agreement**: Conciliation failed, parties didn't settle
+- **Closed**: Process completed (with or without agreement)
+- **Suspended**: Temporarily paused
+- **Cancelled**: Process cancelled by parties
+
+### Status Update Best Practices
+
+1. Update status after each conciliation session
+2. Set `fecha_final` when status changes to "Closed"
+3. Use consistent terminology across all expedientes
+4. Document status changes in the description field
+5. Review active expedientes weekly
+
+## Deleting Expedientes
+
+Expediente deletion is protected to maintain data integrity:
+
+### Deletion Protection
+
+Expedientes cannot be deleted when they have:
+- Assigned submaterias
+- Assigned invitados
+- Assigned conciliadores
+- Attached documents
+- Related activities
+
+System displays: "No puede eliminar! Tiene asignado recursos."
+
+### Safe Deletion Process
+
+1. **Remove All Associations**
+   - Unassign all submaterias
+   - Remove all invitado assignments
+   - Unassign all conciliadores
+   - Delete all expediente documents
+   - Delete related activities from calendar
+
+2. **Delete Expediente**
+   - Once all associations removed, deletion is allowed
+   - Navigate to expediente detail
+   - Click "Delete"
+   - Confirm deletion
+   - Expediente is permanently removed
+
+<Warning>
+Deletion is permanent and cannot be undone. Consider marking expedientes as "Archived" or "Closed" instead of deleting to maintain historical records for reporting and auditing.
+</Warning>
+
+## Role-Based Access Control
+
+Expediente management is restricted to conciliation-focused roles:
+
+| Role | Access Level |
+|------|-------------|
+| **Encargado** (Manager) | Full access - create, view, edit, delete, assign |
+| **Admin** | Full access - create, view, edit, delete, assign |
+| **Asistente** (Assistant) | Full access - create, view, edit, delete, assign |
+| **Abogado** (Lawyer) | No access to expedientes |
+
+<Note>
+Lawyers (abogado) work exclusively with casos and do not have access to the expediente module. This separation maintains clear workflow boundaries between litigation and conciliation processes.
+</Note>
+
+## Integration with Other Modules
+
+### Client Relationship
+- Every expediente must be linked to a client (`id_cliente`)
+- View all client expedientes from client detail page
+- Expediente appears in client's expediente list upon creation
+
+### Document Management
+- Expedientes support unlimited document attachments
+- Documents stored in `/public/documento/`
+- Each document has UUID for secure access
+- Special fields for acta (minutes) documents
+- See [Document Management](/features/document-management)
+
+### Calendar Activities
+- Create expediente-specific activities (ActividadConciliacion)
+- Schedule conciliation sessions and hearings
+- Activities appear on main calendar with distinct color coding
+- See [Calendar & Activities](/features/calendar-activities)
+
+### Catalog Management
+- Submaterias catalog managed at `/conciliacion/submaterias`
+- Invitados catalog managed at `/conciliacion/invitado`
+- Conciliadores catalog managed at `/conciliacion/conciliador`
+- All catalogs support search and reuse
+
+## Conciliation Workflow Example
+
+<AccordionGroup>
+  <Accordion title="Phase 1: Initiation">
+    When a conciliation request arrives:
+    1. Verify client exists in system (create if new)
+    2. Create expediente with basic information
+    3. Assign unique expediente number
+    4. Set status to "Initiated"
+    5. Add comprehensive description of dispute
+    6. Assign relevant submaterias to categorize the matter
+  </Accordion>
+
+  <Accordion title="Phase 2: Preparation">
+    Before the first session:
+    1. Add all invited parties with complete contact information
+    2. Assign appropriate conciliator(s)
+    3. Upload initial documents (requests, evidence, etc.)
+    4. Schedule first conciliation session via calendar
+    5. Send notifications to all parties
+    6. Update status to "Active"
+  </Accordion>
+
+  <Accordion title="Phase 3: Conciliation Sessions">
+    During the negotiation process:
+    1. Update status to "In Progress" after first session
+    2. Upload session minutes (actas) after each meeting
+    3. Schedule follow-up sessions as needed
+    4. Update description with key developments
+    5. Add documents as agreements are drafted
+    6. Track all communications with parties
+  </Accordion>
+
+  <Accordion title="Phase 4: Resolution">
+    When the process concludes:
+    1. Update status to "Agreement Reached" or "No Agreement"
+    2. Set fecha_final to completion date
+    3. Upload final agreement document or closure acta
+    4. Update description with outcome summary
+    5. Change status to "Closed"
+    6. Send final notifications to all parties
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<Tip>
+**Consistent Numbering**: Use a numbering scheme that differentiates expedientes from casos. For example: "EXP-2024-001" for expedientes and "CASO-2024-001" for casos.
+</Tip>
+
+<Tip>
+**Detailed Descriptions**: Document the nature of the dispute, parties' positions, and negotiation history. This information is invaluable for replacement conciliators or case reviews.
+</Tip>
+
+<Tip>
+**Session Minutes**: Upload actas immediately after each session while details are fresh. Include date, attendees, topics discussed, and agreements reached.
+</Tip>
+
+<Tip>
+**Status Discipline**: Update expediente status consistently after each significant event. This enables accurate reporting on conciliation success rates and process duration.
+</Tip>
+
+<Tip>
+**Contact Accuracy**: Keep invitado and conciliador contact information current. Failed notifications due to outdated contacts can derail the entire process.
+</Tip>
+
+## Technical Implementation
+
+For developers and system administrators:
+
+### Model Location
+`app/Models/Expedientes.php`
+
+### Controller
+`app/Http/Controllers/ExpedienteController.php`
+
+### Routes
+- List expedientes: `GET /conciliacion/expediente`
+- Create expediente: `POST /conciliacion/expediente`
+- View expediente: `GET /conciliacion/expediente/{expediente}`
+- Edit expediente: `PUT /conciliacion/expediente/{expediente}`
+- Delete expediente: `DELETE /conciliacion/expediente/{expediente}`
+- Assign submateria: `POST /conciliacion/expediente/{expediente}/submaterias`
+- Remove submateria: `DELETE /conciliacion/expediente/submaterias/{ex_submateria}`
+- Assign invitado: `POST /conciliacion/expediente/{expediente}/invitados`
+- Remove invitado: `DELETE /conciliacion/expediente/invitados/{ex_invitado}`
+- Assign conciliador: `POST /conciliacion/expediente/{expediente}/conciliadores`
+- Remove conciliador: `DELETE /conciliacion/expediente/conciliadores/{ex_conciliador}`
+
+### Related Models
+- `Cliente.php` - Client relationship
+- `Submaterias.php` - Subject matters
+- `InvitadoConciliacion.php` - Invited parties
+- `Conciliador.php` - Conciliators
+- `Expediente_has_submateria.php` - Submateria pivot table
+- `expediente_has_invitado.php` - Invitado pivot table
+- `Expediente_has_conciliador.php` - Conciliador pivot table
+- `ExpedienteDocumento.php` - Documents
+- `ActividadConciliacion.php` - Activities
+
+### Database Tables
+- `expedientes` - Main expediente table
+- `expediente_has_submaterias` - Expediente-submateria relationships
+- `expediente_has_invitados` - Expediente-invitado relationships
+- `expediente_has_conciliadors` - Expediente-conciliador relationships
+
+### Relationships
+- **BelongsTo**: `cliente` - Each expediente belongs to one client
+- **BelongsToMany**: `submaterias` - Many-to-many via pivot
+- **HasMany**: `conActividades` - One-to-many with activities

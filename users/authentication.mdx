@@ -1,0 +1,566 @@
+---
+title: 'Authentication'
+description: 'Laravel Breeze authentication system for login, registration, and password management'
+---
+
+## Overview
+
+Sistema de Abogados uses **Laravel Breeze** as its authentication scaffolding. Breeze provides a minimal, simple implementation of Laravel's authentication features including login, registration, password reset, email verification, and password confirmation.
+
+## Authentication System
+
+The authentication system is built on Laravel's robust authentication foundation with the following features:
+
+<CardGroup cols={2}>
+  <Card title="Session-Based Auth" icon="cookie">
+    Secure session management with CSRF protection
+  </Card>
+  <Card title="Email Verification" icon="envelope-circle-check">
+    Optional email verification for new accounts
+  </Card>
+  <Card title="Password Reset" icon="key">
+    Secure password reset via email tokens
+  </Card>
+  <Card title="Profile Management" icon="user-pen">
+    Self-service profile updates and account deletion
+  </Card>
+</CardGroup>
+
+## Authentication Routes
+
+All authentication routes are defined in `routes/auth.php` and included in the main web routes:
+
+```php routes/web.php
+require __DIR__.'/auth.php';
+```
+
+### Guest Routes (Unauthenticated Users)
+
+These routes are accessible only to users who are not logged in:
+
+```php routes/auth.php
+Route::middleware('guest')->group(function () {
+    // Login
+    Route::get('login', [AuthenticatedSessionController::class, 'create'])
+                ->name('login');
+    Route::post('login', [AuthenticatedSessionController::class, 'store']);
+
+    // Password Reset
+    Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
+                ->name('password.reset');
+    Route::post('reset-password', [NewPasswordController::class, 'store'])
+                ->name('password.store');
+});
+```
+
+<Note>
+User registration is **disabled by default** in this application. The registration routes are commented out in the auth routes file.
+</Note>
+
+### Authenticated Routes
+
+These routes require user authentication:
+
+```php routes/auth.php
+Route::middleware('auth')->group(function () {
+    // Email Verification
+    Route::get('verify-email', [EmailVerificationPromptController::class, '__invoke'])
+                ->name('verification.notice');
+    Route::get('verify-email/{id}/{hash}', [VerifyEmailController::class, '__invoke'])
+                ->middleware(['signed', 'throttle:6,1'])
+                ->name('verification.verify');
+    Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+                ->middleware('throttle:6,1')
+                ->name('verification.send');
+
+    // Password Confirmation
+    Route::get('confirm-password', [ConfirmablePasswordController::class, 'show'])
+                ->name('password.confirm');
+    Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
+
+    // Password Update
+    Route::put('password', [PasswordController::class, 'update'])->name('password.update');
+
+    // Logout
+    Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
+                ->name('logout');
+});
+```
+
+## Login Process
+
+<Steps>
+  <Step title="Display Login Form">
+    Users navigate to the login page at `/login`
+    
+    ```php app/Http/Controllers/Auth/AuthenticatedSessionController.php
+    public function create(): View
+    {
+        return view('login');
+    }
+    ```
+  </Step>
+  
+  <Step title="Submit Credentials">
+    Users submit their email and password via POST to `/login`
+    
+    ```php app/Http/Controllers/Auth/AuthenticatedSessionController.php
+    public function store(LoginRequest $request): RedirectResponse
+    {
+        $request->authenticate();
+        $request->session()->regenerate();
+        
+        return redirect()->intended(RouteServiceProvider::HOME);
+    }
+    ```
+  </Step>
+  
+  <Step title="Session Regeneration">
+    Upon successful authentication, the session ID is regenerated to prevent session fixation attacks
+  </Step>
+  
+  <Step title="Redirect to Dashboard">
+    Users are redirected to the intended page or the default dashboard
+  </Step>
+</Steps>
+
+### Login Request Validation
+
+The `LoginRequest` class handles authentication logic and rate limiting:
+
+```php app/Http/Requests/Auth/LoginRequest.php
+public function authenticate(): void
+{
+    if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        RateLimiter::hit($this->throttleKey());
+
+        throw ValidationException::withMessages([
+            'email' => __('auth.failed'),
+        ]);
+    }
+
+    RateLimiter::clear($this->throttleKey());
+}
+```
+
+## Registration (Disabled)
+
+By default, user registration is disabled in this application. The registration routes are commented out:
+
+```php routes/auth.php
+// Route::get('register', [RegisteredUserController::class, 'create'])
+//             ->name('register');
+// Route::post('register', [RegisteredUserController::class, 'store']);
+```
+
+### Creating Users
+
+New users must be created by administrators through the admin panel at `/admin/users/create`.
+
+```php app/Http/Controllers/Admin/UserController.php
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'name' => ['required'], 
+        'email' => ['required'], 
+        'password' => ['required']
+    ]);
+    
+    if ($request->hasFile('avatar')) {
+        $file = $request->file('avatar');
+        $avatarName = time().$file->getClientOriginalName();
+        $file->move(\public_path("avatar/"), $avatarName);
+        $validated['avatar'] = $avatarName;
+    }
+    
+    $validated['email'] = $validated['email'].'@pizarro.com';
+    
+    try{
+        User::create($validated);
+        return to_route('admin.users.index')
+            ->with('message', 'Usuario creado correctamente.');
+    } catch(\Exception $e){
+        return back()->with('messageAlert', 'Correo existente, pruebe otro.');
+    }
+}
+```
+
+<Warning>
+All user emails are automatically appended with `@pizarro.com` domain during creation.
+</Warning>
+
+## Password Reset Flow
+
+Although the password request form routes are commented out, password reset functionality is available:
+
+<Steps>
+  <Step title="Request Password Reset">
+    Password reset links can be sent manually or through administrator intervention
+    
+    ```php app/Http/Controllers/Auth/PasswordResetLinkController.php
+    public function store(Request $request): RedirectResponse
+    {
+        $request->validate(['email' => ['required', 'email']]);
+
+        $status = Password::sendResetLink(
+            $request->only('email')
+        );
+
+        return $status == Password::RESET_LINK_SENT
+                    ? back()->with('status', __($status))
+                    : back()->withInput($request->only('email'))
+                            ->withErrors(['email' => __($status)]);
+    }
+    ```
+  </Step>
+  
+  <Step title="Receive Reset Email">
+    Users receive an email with a secure token and link to `/reset-password/{token}`
+  </Step>
+  
+  <Step title="Set New Password">
+    Users submit their new password via the reset form
+    
+    ```php app/Http/Controllers/Auth/NewPasswordController.php
+    public function store(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'token' => ['required'],
+            'email' => ['required', 'email'],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user) use ($request) {
+                $user->forceFill([
+                    'password' => Hash::make($request->password),
+                    'remember_token' => Str::random(60),
+                ])->save();
+
+                event(new PasswordReset($user));
+            }
+        );
+
+        return $status == Password::PASSWORD_RESET
+                    ? redirect()->route('login')->with('status', __($status))
+                    : back()->withInput($request->only('email'))
+                            ->withErrors(['email' => __($status)]);
+    }
+    ```
+  </Step>
+  
+  <Step title="Redirect to Login">
+    After successful password reset, users are redirected to the login page
+  </Step>
+</Steps>
+
+## Email Verification
+
+The application supports email verification for new accounts:
+
+### Verification Notice
+
+Users who haven't verified their email see a prompt:
+
+```php routes/auth.php
+Route::get('verify-email', [EmailVerificationPromptController::class, '__invoke'])
+            ->name('verification.notice');
+```
+
+### Verification Link
+
+Clicking the verification link in the email verifies the account:
+
+```php routes/auth.php
+Route::get('verify-email/{id}/{hash}', [VerifyEmailController::class, '__invoke'])
+            ->middleware(['signed', 'throttle:6,1'])
+            ->name('verification.verify');
+```
+
+<Note>
+The verification link is signed and rate-limited (6 attempts per minute) to prevent abuse.
+</Note>
+
+### Resending Verification Email
+
+Users can request a new verification email:
+
+```php routes/auth.php
+Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+            ->middleware('throttle:6,1')
+            ->name('verification.send');
+```
+
+### Protected Routes
+
+Many routes require email verification using the `verified` middleware:
+
+```php routes/web.php
+Route::middleware(['auth', 'verified'])->name('dashboard')->prefix('dashboard')->group(function() {
+    Route::get('/', [indexController::class, 'dashboard']);
+    Route::get('/', [indexController::class, 'dashCalendar']);
+});
+```
+
+## Logout Process
+
+<Steps>
+  <Step title="Initiate Logout">
+    Users submit a POST request to `/logout`
+    
+    ```php app/Http/Controllers/Auth/AuthenticatedSessionController.php
+    public function destroy(Request $request): RedirectResponse
+    {
+        Auth::guard('web')->logout();
+        
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        
+        return redirect('/');
+    }
+    ```
+  </Step>
+  
+  <Step title="Session Invalidation">
+    The user's session is completely invalidated
+  </Step>
+  
+  <Step title="CSRF Token Regeneration">
+    A new CSRF token is generated to prevent CSRF attacks
+  </Step>
+  
+  <Step title="Redirect to Home">
+    Users are redirected to the home page (`/`), which shows the login view
+  </Step>
+</Steps>
+
+## Profile Management
+
+Authenticated users can manage their own profiles:
+
+### Edit Profile
+
+```php app/Http/Controllers/ProfileController.php
+public function edit(Request $request): View
+{
+    return view('profile.edit', [
+        'user' => $request->user(),
+    ]);
+}
+```
+
+**Route:** `GET /profile`
+
+### Update Profile
+
+```php app/Http/Controllers/ProfileController.php
+public function update(ProfileUpdateRequest $request): RedirectResponse
+{
+    $request->user()->fill($request->validated());
+
+    if ($request->user()->isDirty('email')) {
+        $request->user()->email_verified_at = null;
+    }
+
+    $request->user()->save();
+
+    return Redirect::route('profile.edit')->with('status', 'profile-updated');
+}
+```
+
+**Route:** `PATCH /profile`
+
+<Warning>
+Changing the email address will reset email verification status, requiring the user to verify the new email.
+</Warning>
+
+### Delete Account
+
+Users can delete their own accounts:
+
+```php app/Http/Controllers/ProfileController.php
+public function destroy(Request $request): RedirectResponse
+{
+    $request->validateWithBag('userDeletion', [
+        'password' => ['required', 'current-password'],
+    ]);
+
+    $user = $request->user();
+
+    Auth::logout();
+
+    $user->delete();
+
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return Redirect::to('/');
+}
+```
+
+**Route:** `DELETE /profile`
+
+<Note>
+Account deletion requires password confirmation to prevent accidental or unauthorized deletion.
+</Note>
+
+## Password Hashing
+
+The User model automatically hashes passwords using a mutator:
+
+```php app/Models/User.php
+use Illuminate\Support\Facades\Hash;
+
+public function setPasswordAttribute($password){
+    $this->attributes['password'] = Hash::make($password);
+}
+```
+
+This ensures passwords are never stored in plain text, whether created through admin panel or authentication flows.
+
+## Session Management
+
+Laravel's session management provides secure, encrypted session storage:
+
+- **Session Regeneration**: Session IDs are regenerated on login to prevent fixation
+- **Session Invalidation**: Sessions are invalidated on logout
+- **CSRF Protection**: All POST requests require valid CSRF tokens
+- **Session Timeout**: Configurable session lifetime in `config/session.php`
+
+## Password Confirmation
+
+Sensitive operations can require password confirmation:
+
+```php routes/auth.php
+Route::get('confirm-password', [ConfirmablePasswordController::class, 'show'])
+            ->name('password.confirm');
+Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
+```
+
+This adds an extra layer of security for critical actions.
+
+## User Model
+
+The User model includes authentication-related traits and configuration:
+
+```php app/Models/User.php
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
+
+class User extends Authenticatable
+{
+    use HasApiTokens, HasFactory, Notifiable, HasRoles, Searchable;
+
+    protected $fillable = [
+        'name',
+        'email',
+        'avatar',
+        'password',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
+}
+```
+
+## Security Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Rate Limiting" icon="gauge-high">
+    Login and password reset attempts are rate-limited to prevent brute force attacks
+  </Card>
+  <Card title="CSRF Protection" icon="shield-halved">
+    All form submissions require valid CSRF tokens
+  </Card>
+  <Card title="Password Hashing" icon="lock">
+    Passwords are hashed using bcrypt with automatic salting
+  </Card>
+  <Card title="Signed URLs" icon="signature">
+    Email verification links use signed URLs to prevent tampering
+  </Card>
+  <Card title="Session Security" icon="cookie-bite">
+    Sessions are encrypted and regenerated on authentication state changes
+  </Card>
+  <Card title="Email Verification" icon="envelope-circle-check">
+    Critical routes require email verification
+  </Card>
+</CardGroup>
+
+## Authentication Middleware
+
+The application uses several middleware for authentication:
+
+- **`auth`**: Requires user to be authenticated
+- **`guest`**: Requires user to NOT be authenticated
+- **`verified`**: Requires email verification
+- **`role:{roles}`**: Requires specific role(s) via Spatie Permission
+
+Example usage:
+
+```php routes/web.php
+// Requires authentication only
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit']);
+});
+
+// Requires authentication AND email verification
+Route::middleware(['auth', 'verified'])->group(function() {
+    Route::get('/dashboard', [IndexController::class, 'dashboard']);
+});
+
+// Requires authentication AND specific role
+Route::middleware(['auth', 'role:admin'])->group(function() {
+    Route::resource('/users', UserController::class);
+});
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Login fails with correct credentials">
+    - Verify the user exists in the database
+    - Check that the password was properly hashed
+    - Ensure the email is in the correct format (`username@pizarro.com`)
+    - Check for rate limiting if multiple failed attempts occurred
+  </Accordion>
+  
+  <Accordion title="Email verification not working">
+    - Ensure mail configuration is correct in `.env`
+    - Check that `MAIL_FROM_ADDRESS` is set
+    - Verify the user's email is correct
+    - Check spam folders for verification emails
+  </Accordion>
+  
+  <Accordion title="Session expires too quickly">
+    - Adjust `SESSION_LIFETIME` in `.env`
+    - Check `SESSION_DRIVER` configuration
+    - Ensure session storage is working correctly
+  </Accordion>
+  
+  <Accordion title="CSRF token mismatch">
+    - Ensure `@csrf` directive is in all forms
+    - Check that session middleware is active
+    - Verify APP_KEY is set in `.env`
+    - Clear browser cookies and try again
+  </Accordion>
+</AccordionGroup>
+
+## See Also
+
+<CardGroup cols={2}>
+  <Card title="Roles and Permissions" icon="shield" href="/users/roles-permissions">
+    Learn about role-based access control and permissions
+  </Card>
+  <Card title="User Types" icon="user-group" href="/users/user-types">
+    Understand different user roles and their capabilities
+  </Card>
+</CardGroup>

@@ -1,0 +1,541 @@
+---
+title: "Web Routes"
+description: "Complete reference of application routes organized by feature area"
+---
+
+## Overview
+
+This document provides a comprehensive reference of all web routes in the Sistema de Abogados application. Routes are organized by feature area and include authentication, role-based access control, and resource management.
+
+<Note>
+All routes require authentication via the `auth` middleware unless otherwise specified. Many routes also implement role-based access control using the `role` middleware.
+</Note>
+
+---
+
+## Dashboard Routes
+
+**Prefix:** `/dashboard`  
+**Middleware:** `auth`, `verified`  
+**Route Name Prefix:** `dashboard`
+
+<Accordion title="Dashboard Routes">
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/dashboard` | `dashboard` | `indexController@dashboard` | Main dashboard view |
+| GET | `/dashboard` | `dashboard` | `indexController@dashCalendar` | Dashboard calendar view |
+
+```php
+Route::middleware(['auth', 'verified'])->name('dashboard')->prefix('dashboard')->group(function() {
+    Route::get('/', [indexController::class, 'dashboard']);
+    Route::get('/', [indexController::class, 'dashCalendar']);
+});
+```
+
+</Accordion>
+
+---
+
+## Admin Routes
+
+**Prefix:** `/admin`  
+**Middleware:** `auth`, `role:admin`  
+**Route Name Prefix:** `admin.`
+
+<Warning>
+All admin routes are restricted to users with the **admin** role. Unauthorized access will be denied.
+</Warning>
+
+<AccordionGroup>
+
+<Accordion title="Admin Index">
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/admin` | `admin.index` | `IndexController@index` | Admin panel homepage |
+
+</Accordion>
+
+<Accordion title="Role Management Routes">
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/admin/roles` | `admin.roles.index` | `RoleController@index` | List all roles |
+| GET | `/admin/roles/create` | `admin.roles.create` | `RoleController@create` | Create role form |
+| POST | `/admin/roles` | `admin.roles.store` | `RoleController@store` | Store new role |
+| GET | `/admin/roles/{role}` | `admin.roles.show` | `RoleController@show` | Show role details |
+| GET | `/admin/roles/{role}/edit` | `admin.roles.edit` | `RoleController@edit` | Edit role form |
+| PUT/PATCH | `/admin/roles/{role}` | `admin.roles.update` | `RoleController@update` | Update role |
+| DELETE | `/admin/roles/{role}` | `admin.roles.destroy` | `RoleController@destroy` | Delete role |
+| POST | `/admin/roles/{role}/permissions` | `admin.roles.permissions` | `RoleController@givePermission` | Assign permission to role |
+| DELETE | `/admin/roles/{role}/permissions/{permission}` | `admin.roles.permissions.revoke` | `RoleController@revokePermission` | Revoke permission from role |
+
+```php
+Route::resource('/roles', RoleController::class);
+Route::post('/roles/{role}/permissions', [RoleController::class, 'givePermission'])->name('roles.permissions');
+Route::delete('/roles/{role}/permissions/{permission}', [RoleController::class, 'revokePermission'])->name('roles.permissions.revoke');
+```
+
+</Accordion>
+
+<Accordion title="Permission Management Routes">
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/admin/permissions` | `admin.permissions.index` | `PermissionController@index` | List all permissions |
+| GET | `/admin/permissions/create` | `admin.permissions.create` | `PermissionController@create` | Create permission form |
+| POST | `/admin/permissions` | `admin.permissions.store` | `PermissionController@store` | Store new permission |
+| GET | `/admin/permissions/{permission}` | `admin.permissions.show` | `PermissionController@show` | Show permission details |
+| GET | `/admin/permissions/{permission}/edit` | `admin.permissions.edit` | `PermissionController@edit` | Edit permission form |
+| PUT/PATCH | `/admin/permissions/{permission}` | `admin.permissions.update` | `PermissionController@update` | Update permission |
+| DELETE | `/admin/permissions/{permission}` | `admin.permissions.destroy` | `PermissionController@destroy` | Delete permission |
+| POST | `/admin/permissions/{permission}/roles` | `admin.permissions.roles` | `PermissionController@assignRole` | Assign role to permission |
+| DELETE | `/admin/permissions/{permission}/roles/{role}` | `admin.permissions.roles.remove` | `PermissionController@removeRole` | Remove role from permission |
+
+```php
+Route::resource('/permissions', PermissionController::class);
+Route::post('/permissions/{permission}/roles', [PermissionController::class, 'assignRole'])->name('permissions.roles');
+Route::delete('/permissions/{permission}/roles/{role}', [PermissionController::class, 'removeRole'])->name('permissions.roles.remove');
+```
+
+</Accordion>
+
+<Accordion title="User Management Routes">
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/admin/users` | `admin.users.index` | `UserController@index` | List all users |
+| GET | `/admin/users/create` | `admin.users.create` | `UserController@create` | Create user form |
+| POST | `/admin/users` | `admin.users.store` | `UserController@store` | Store new user |
+| GET | `/admin/users/{user}` | `admin.users.show` | `UserController@show` | Show user details |
+| GET | `/admin/users/{user}/edit` | `admin.users.edit` | `UserController@edit` | Edit user form |
+| PUT/PATCH | `/admin/users/{user}` | `admin.users.update` | `UserController@update` | Update user |
+| DELETE | `/admin/users/{user}` | `admin.users.destroy` | `UserController@destroy` | Delete user |
+| POST | `/admin/users/{user}/roles` | `admin.users.roles` | `UserController@assignRole` | Assign role to user |
+| DELETE | `/admin/users/{user}/roles/{role}` | `admin.users.roles.remove` | `UserController@removeRole` | Remove role from user |
+| POST | `/admin/users/{user}/permissions` | `admin.users.permissions` | `UserController@givePermission` | Give permission to user |
+| DELETE | `/admin/users/{user}/permissions/{permission}` | `admin.users.permissions.revoke` | `UserController@revokePermission` | Revoke permission from user |
+
+```php
+Route::resource('/users', UserController::class);
+Route::post('/users/{user}/roles', [UserController::class, 'assignRole'])->name('users.roles');
+Route::delete('/users/{user}/roles/{role}', [UserController::class, 'removeRole'])->name('users.roles.remove');
+Route::post('/users/{user}/permissions', [UserController::class, 'givePermission'])->name('users.permissions');
+Route::delete('/users/{user}/permissions/{permission}', [UserController::class, 'revokePermission'])->name('users.permissions.revoke');
+```
+
+</Accordion>
+
+</AccordionGroup>
+
+---
+
+## Cliente Routes
+
+**Prefix:** `/clientes`  
+**Middleware:** `auth`, `role:encargado|admin|asistente|abogado`  
+**Route Name Prefix:** `clientes.`
+
+<Warning>
+Restricted to users with roles: **encargado**, **admin**, **asistente**, or **abogado**
+</Warning>
+
+<Accordion title="Cliente CRUD Routes">
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/clientes` | `clientes.index` | `ClienteController@index` | List all clients |
+| GET | `/clientes/create` | `clientes.create` | `ClienteController@create` | Create client form |
+| POST | `/clientes` | `clientes.store` | `ClienteController@store` | Store new client |
+| GET | `/clientes/{cliente}` | `clientes.clientes.show` | `ClienteController@show` | Show client details |
+| GET | `/clientes/{cliente}/edit` | `clientes.clientes.edit` | `ClienteController@edit` | Edit client form |
+| PUT/PATCH | `/clientes/{cliente}` | `clientes.clientes.update` | `ClienteController@update` | Update client |
+| DELETE | `/clientes/{cliente}` | `clientes.clientes.destroy` | `ClienteController@destroy` | Delete client |
+| GET | `/clientes/search` | `clientes.search` | `ClienteController@search` | Search clients |
+
+```php
+Route::middleware(['auth', 'role:encargado|admin|asistente|abogado'])->name('clientes.')->prefix('clientes')->group(function() {
+    Route::resource('/', ClienteController::class);
+    Route::get('/search', [ClienteController::class, 'search'])->name('search');
+});
+```
+
+</Accordion>
+
+---
+
+## Conciliacion Routes
+
+**Prefix:** `/conciliacion`  
+**Middleware:** `auth`, `role:encargado|admin|asistente`  
+**Route Name Prefix:** `conciliacion.`
+
+<Warning>
+Restricted to users with roles: **encargado**, **admin**, or **asistente**
+</Warning>
+
+<AccordionGroup>
+
+<Accordion title="Submateria Routes">
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/conciliacion/submaterias` | `conciliacion.submaterias.index` | `SubmateriaController@index` | List all submaterias |
+| GET | `/conciliacion/submaterias/create` | `conciliacion.submaterias.create` | `SubmateriaController@create` | Create submateria form |
+| POST | `/conciliacion/submaterias` | `conciliacion.submaterias.store` | `SubmateriaController@store` | Store new submateria |
+| GET | `/conciliacion/submaterias/{submateria}` | `conciliacion.submaterias.show` | `SubmateriaController@show` | Show submateria details |
+| GET | `/conciliacion/submaterias/{submateria}/edit` | `conciliacion.submaterias.edit` | `SubmateriaController@edit` | Edit submateria form |
+| PUT/PATCH | `/conciliacion/submaterias/{submateria}` | `conciliacion.submaterias.update` | `SubmateriaController@update` | Update submateria |
+| DELETE | `/conciliacion/submaterias/{submateria}` | `conciliacion.submaterias.destroy` | `SubmateriaController@destroy` | Delete submateria |
+
+</Accordion>
+
+<Accordion title="Invitado Routes">
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/conciliacion/invitado` | `conciliacion.invitado.index` | `InvitadoConciliacionController@index` | List all invitados |
+| GET | `/conciliacion/invitado/create` | `conciliacion.invitado.create` | `InvitadoConciliacionController@create` | Create invitado form |
+| POST | `/conciliacion/invitado` | `conciliacion.invitado.store` | `InvitadoConciliacionController@store` | Store new invitado |
+| GET | `/conciliacion/invitado/{invitado}` | `conciliacion.invitado.show` | `InvitadoConciliacionController@show` | Show invitado details |
+| GET | `/conciliacion/invitado/{invitado}/edit` | `conciliacion.invitado.edit` | `InvitadoConciliacionController@edit` | Edit invitado form |
+| PUT/PATCH | `/conciliacion/invitado/{invitado}` | `conciliacion.invitado.update` | `InvitadoConciliacionController@update` | Update invitado |
+| DELETE | `/conciliacion/invitado/{invitado}` | `conciliacion.invitado.destroy` | `InvitadoConciliacionController@destroy` | Delete invitado |
+
+</Accordion>
+
+<Accordion title="Conciliador Routes">
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/conciliacion/conciliador` | `conciliacion.conciliador.index` | `ConciliadorController@index` | List all conciliadores |
+| GET | `/conciliacion/conciliador/create` | `conciliacion.conciliador.create` | `ConciliadorController@create` | Create conciliador form |
+| POST | `/conciliacion/conciliador` | `conciliacion.conciliador.store` | `ConciliadorController@store` | Store new conciliador |
+| GET | `/conciliacion/conciliador/{conciliador}` | `conciliacion.conciliador.show` | `ConciliadorController@show` | Show conciliador details |
+| GET | `/conciliacion/conciliador/{conciliador}/edit` | `conciliacion.conciliador.edit` | `ConciliadorController@edit` | Edit conciliador form |
+| PUT/PATCH | `/conciliacion/conciliador/{conciliador}` | `conciliacion.conciliador.update` | `ConciliadorController@update` | Update conciliador |
+| DELETE | `/conciliacion/conciliador/{conciliador}` | `conciliacion.conciliador.destroy` | `ConciliadorController@destroy` | Delete conciliador |
+
+```php
+Route::resource('/conciliador', ConciliadorController::class);
+```
+
+</Accordion>
+
+<Accordion title="Expediente Routes">
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/conciliacion/expediente` | `conciliacion.expediente.index` | `ExpedienteController@index` | List all expedientes |
+| GET | `/conciliacion/expediente/create` | `conciliacion.expediente.create` | `ExpedienteController@create` | Create expediente form |
+| POST | `/conciliacion/expediente` | `conciliacion.expediente.store` | `ExpedienteController@store` | Store new expediente |
+| GET | `/conciliacion/expediente/{expediente}` | `conciliacion.expediente.show` | `ExpedienteController@show` | Show expediente details |
+| GET | `/conciliacion/expediente/{expediente}/edit` | `conciliacion.expediente.edit` | `ExpedienteController@edit` | Edit expediente form |
+| PUT/PATCH | `/conciliacion/expediente/{expediente}` | `conciliacion.expediente.update` | `ExpedienteController@update` | Update expediente |
+| DELETE | `/conciliacion/expediente/{expediente}` | `conciliacion.expediente.destroy` | `ExpedienteController@destroy` | Delete expediente |
+
+**Submateria Assignment:**
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| POST | `/conciliacion/expediente/{expediente}/submaterias` | `conciliacion.expediente.submaterias` | `ExpedienteController@assignSubmateria` | Assign submateria to expediente |
+| DELETE | `/conciliacion/expediente/submaterias/{ex_submateria}` | `conciliacion.expediente.submaterias.remove` | `ExpedienteController@removeSubmateria` | Remove submateria from expediente |
+
+**Invitado Assignment:**
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| POST | `/conciliacion/expediente/{expediente}/invitados` | `conciliacion.expediente.invitados` | `ExpedienteController@assignInvitado` | Assign invitado to expediente |
+| DELETE | `/conciliacion/expediente/invitados/{ex_invitado}` | `conciliacion.expediente.invitados.remove` | `ExpedienteController@removeInvitado` | Remove invitado from expediente |
+
+**Conciliador Assignment:**
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| POST | `/conciliacion/expediente/{expediente}/conciliadores` | `conciliacion.expediente.conciliadores` | `ExpedienteController@assignConciliador` | Assign conciliador to expediente |
+| DELETE | `/conciliacion/expediente/conciliadores/{ex_conciliador}` | `conciliacion.expediente.conciliadores.remove` | `ExpedienteController@removeConciliador` | Remove conciliador from expediente |
+
+</Accordion>
+
+<Accordion title="Expediente Document Routes">
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/conciliacion/expediente/{expediente}/file` | `conciliacion.expediente.file.create` | `ExpedienteDocumentosController@create` | Create document form |
+| POST | `/conciliacion/expediente/{expediente}` | `conciliacion.expediente.file.store` | `ExpedienteDocumentosController@store` | Upload document |
+| GET | `/conciliacion/expediente/file/{file}/edit` | `conciliacion.expediente.file.edit` | `ExpedienteDocumentosController@edit` | Edit document form |
+| PUT/PATCH | `/conciliacion/expediente/{file}/file` | `conciliacion.expediente.file.update` | `ExpedienteDocumentosController@update` | Update document |
+| DELETE | `/conciliacion/expediente/{expediente}/file` | `conciliacion.expediente.file.destroy` | `ExpedienteDocumentosController@destroy` | Delete document |
+| GET | `/conciliacion/expediente/file/download/{file}` | `conciliacion.expediente.file.download` | `ExpedienteDocumentosController@download` | Download document |
+| GET | `/conciliacion/expediente/file/{file}` | `conciliacion.expediente.file.view` | `ExpedienteDocumentosController@view` | View document |
+
+```php
+Route::get('/expediente/{expediente}/file', [ExpedienteDocumentosController::class, 'create'])->name('expediente.file.create');
+Route::post('/expediente/{expediente}', [ExpedienteDocumentosController::class, 'store'])->name('expediente.file.store');
+Route::delete('/expediente/{expediente}/file', [ExpedienteDocumentosController::class, 'destroy'])->name('expediente.file.destroy');
+Route::get('/expediente/file/download/{file}', [ExpedienteDocumentosController::class, 'download'])->name('expediente.file.download');
+```
+
+</Accordion>
+
+</AccordionGroup>
+
+---
+
+## Caso Routes
+
+**Prefix:** `/caso`  
+**Middleware:** `auth`, `role:encargado|admin|abogado`  
+**Route Name Prefix:** `caso.`
+
+<Warning>
+Restricted to users with roles: **encargado**, **admin**, or **abogado**
+</Warning>
+
+<AccordionGroup>
+
+<Accordion title="Caso CRUD Routes">
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/caso/caso` | `caso.caso.index` | `CasosController@index` | List all casos |
+| GET | `/caso/caso/create` | `caso.caso.create` | `CasosController@create` | Create caso form |
+| POST | `/caso/caso` | `caso.caso.store` | `CasosController@store` | Store new caso |
+| GET | `/caso/caso/{caso}` | `caso.caso.show` | `CasosController@show` | Show caso details |
+| GET | `/caso/caso/{caso}/edit` | `caso.caso.edit` | `CasosController@edit` | Edit caso form |
+| PUT/PATCH | `/caso/caso/{caso}` | `caso.caso.update` | `CasosController@update` | Update caso |
+| DELETE | `/caso/caso/{caso}` | `caso.caso.destroy` | `CasosController@destroy` | Delete caso |
+
+**Proceso Assignment:**
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| POST | `/caso/caso/{caso}/procesos` | `caso.caso.proceso` | `CasosController@assignProceso` | Assign proceso to caso |
+| DELETE | `/caso/caso/procesos/{cas_proceso}` | `caso.caso.proceso.remove` | `CasosController@removeProceso` | Remove proceso from caso |
+
+**Parte Contraria Assignment:**
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| POST | `/caso/caso/{caso}/p_contrarias` | `caso.caso.p_contrarias` | `CasosController@assignPContraria` | Assign parte contraria to caso |
+| DELETE | `/caso/caso/p_contrarias/{cas_contraria}` | `caso.caso.p_contrarias.remove` | `CasosController@removePContraria` | Remove parte contraria from caso |
+
+```php
+Route::resource('/caso', CasosController::class);
+Route::post('/caso/{caso}/procesos', [CasosController::class, 'assignProceso'])->name('caso.proceso');
+Route::post('/caso/{caso}/p_contrarias', [CasosController::class, 'assignPContraria'])->name('caso.p_contrarias');
+```
+
+</Accordion>
+
+<Accordion title="Caso Document Routes">
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/caso/caso/{caso}/file` | `caso.caso.file.create` | `CasoDocumentoController@create` | Create document form |
+| POST | `/caso/caso/{caso}` | `caso.caso.file.store` | `CasoDocumentoController@store` | Upload document |
+| GET | `/caso/caso/file/{file}/edit` | `caso.caso.file.edit` | `CasoDocumentoController@edit` | Edit document form |
+| PUT/PATCH | `/caso/caso/{file}/file` | `caso.caso.file.update` | `CasoDocumentoController@update` | Update document |
+| DELETE | `/caso/caso/{caso}/file` | `caso.caso.file.destroy` | `CasoDocumentoController@destroy` | Delete document |
+| GET | `/caso/caso/file/download/{file}` | `caso.caso.file.download` | `CasoDocumentoController@download` | Download document |
+| GET | `/caso/caso/file/{file}` | `caso.caso.file.view` | `CasoDocumentoController@view` | View document |
+
+</Accordion>
+
+<Accordion title="Tipo Proceso Routes">
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/caso/tipoProceso` | `caso.tipoProceso.index` | `TipoProcesoController@index` | List all tipo procesos |
+| GET | `/caso/tipoProceso/create` | `caso.tipoProceso.create` | `TipoProcesoController@create` | Create tipo proceso form |
+| POST | `/caso/tipoProceso` | `caso.tipoProceso.store` | `TipoProcesoController@store` | Store new tipo proceso |
+| GET | `/caso/tipoProceso/{tipoProceso}` | `caso.tipoProceso.show` | `TipoProcesoController@show` | Show tipo proceso details |
+| GET | `/caso/tipoProceso/{tipoProceso}/edit` | `caso.tipoProceso.edit` | `TipoProcesoController@edit` | Edit tipo proceso form |
+| PUT/PATCH | `/caso/tipoProceso/{tipoProceso}` | `caso.tipoProceso.update` | `TipoProcesoController@update` | Update tipo proceso |
+| DELETE | `/caso/tipoProceso/{tipoProceso}` | `caso.tipoProceso.destroy` | `TipoProcesoController@destroy` | Delete tipo proceso |
+
+</Accordion>
+
+<Accordion title="Parte Contraria Routes">
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/caso/parteContraria` | `caso.parteContraria.index` | `ParteContrariaController@index` | List all partes contrarias |
+| GET | `/caso/parteContraria/create` | `caso.parteContraria.create` | `ParteContrariaController@create` | Create parte contraria form |
+| POST | `/caso/parteContraria` | `caso.parteContraria.store` | `ParteContrariaController@store` | Store new parte contraria |
+| GET | `/caso/parteContraria/{parteContraria}` | `caso.parteContraria.show` | `ParteContrariaController@show` | Show parte contraria details |
+| GET | `/caso/parteContraria/{parteContraria}/edit` | `caso.parteContraria.edit` | `ParteContrariaController@edit` | Edit parte contraria form |
+| PUT/PATCH | `/caso/parteContraria/{parteContraria}` | `caso.parteContraria.update` | `ParteContrariaController@update` | Update parte contraria |
+| DELETE | `/caso/parteContraria/{parteContraria}` | `caso.parteContraria.destroy` | `ParteContrariaController@destroy` | Delete parte contraria |
+
+</Accordion>
+
+</AccordionGroup>
+
+---
+
+## Agenda Routes
+
+**Prefix:** `/agenda`  
+**Route Name Prefix:** `agenda.`
+
+<AccordionGroup>
+
+<Accordion title="Calendar Routes">
+
+**Middleware:** `auth`, `verified`
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/agenda/calendar` | `agenda.calendar.index` | `CalendarController@index` | Calendar view |
+
+```php
+Route::middleware(['auth', 'verified'])->name('agenda.')->prefix('agenda')->group(function() {
+    Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');
+});
+```
+
+</Accordion>
+
+<Accordion title="Actividad Routes (General)">
+
+**Middleware:** `auth`, `verified`
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/agenda/actividad` | `agenda.actividad.index` | `ActividadController@index` | List all activities |
+| GET | `/agenda/actividad/create` | `agenda.actividad.create` | `ActividadController@create` | Create activity form |
+| POST | `/agenda/actividad` | `agenda.actividad.store` | `ActividadController@store` | Store new activity |
+| GET | `/agenda/actividad/{actividades}` | `agenda.actividad.show` | `ActividadController@show` | Show activity details |
+| GET | `/agenda/actividad/{actividades}/edit` | `agenda.agenda.actividad.edit` | `ActividadController@edit` | Edit activity form |
+| PUT/PATCH | `/agenda/actividad/{actividades}` | `agenda.agenda.actividad.update` | `ActividadController@update` | Update activity |
+| DELETE | `/agenda/actividad/{actividades}` | `agenda.agenda.actividad.destroy` | `ActividadController@destroy` | Delete activity |
+
+</Accordion>
+
+<Accordion title="Actividad Conciliacion Routes">
+
+**Middleware:** `auth`, `role:encargado|admin|asistente`
+
+<Warning>
+Restricted to users with roles: **encargado**, **admin**, or **asistente**
+</Warning>
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/agenda/actividadConciliacion` | `agenda.actividadConciliacion.index` | `ActividadConciliacionController@index` | List conciliacion activities |
+| GET | `/agenda/actividadConciliacion/create` | `agenda.actividadConciliacion.create` | `ActividadConciliacionController@create` | Create conciliacion activity form |
+| POST | `/agenda/actividadConciliacion` | `agenda.actividadConciliacion.store` | `ActividadConciliacionController@store` | Store new conciliacion activity |
+| GET | `/agenda/actividadConciliacion/{con_actividad}` | `agenda.actividadConciliacion.show` | `ActividadConciliacionController@show` | Show conciliacion activity |
+| GET | `/agenda/actividadConciliacion/{con_actividad}/edit` | `agenda.agenda.actividadConciliacion.edit` | `ActividadConciliacionController@edit` | Edit conciliacion activity form |
+| PUT/PATCH | `/agenda/actividadConciliacion/{con_actividad}` | `agenda.agenda.actividadConciliacion.update` | `ActividadConciliacionController@update` | Update conciliacion activity |
+| DELETE | `/agenda/actividadConciliacion/{con_actividad}` | `agenda.agenda.actividadConciliacion.destroy` | `ActividadConciliacionController@destroy` | Delete conciliacion activity |
+
+```php
+Route::middleware(['auth', 'role:encargado|admin|asistente'])->name('agenda.')->prefix('agenda')->group(function() {
+    Route::resource('/actividadConciliacion', ActividadConciliacionController::class);
+});
+```
+
+</Accordion>
+
+<Accordion title="Actividad Caso Routes">
+
+**Middleware:** `auth`, `role:encargado|admin|abogado`
+
+<Warning>
+Restricted to users with roles: **encargado**, **admin**, or **abogado**
+</Warning>
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/agenda/actividadCaso` | `agenda.actividadCaso.index` | `ActividadCasoController@index` | List caso activities |
+| GET | `/agenda/actividadCaso/create` | `agenda.actividadCaso.create` | `ActividadCasoController@create` | Create caso activity form |
+| POST | `/agenda/actividadCaso` | `agenda.actividadCaso.store` | `ActividadCasoController@store` | Store new caso activity |
+| GET | `/agenda/actividadCaso/{cas_actividad}` | `agenda.actividadCaso.show` | `ActividadCasoController@show` | Show caso activity |
+| GET | `/agenda/actividadCaso/{cas_actividad}/edit` | `agenda.agenda.actividadCaso.edit` | `ActividadCasoController@edit` | Edit caso activity form |
+| PUT/PATCH | `/agenda/actividadCaso/{cas_actividad}` | `agenda.agenda.actividadCaso.update` | `ActividadCasoController@update` | Update caso activity |
+| DELETE | `/agenda/actividadCaso/{cas_actividad}` | `agenda.agenda.actividadCaso.destroy` | `ActividadCasoController@destroy` | Delete caso activity |
+
+</Accordion>
+
+</AccordionGroup>
+
+---
+
+## Profile Routes
+
+**Middleware:** `auth`  
+**Route Name Prefix:** `profile.`
+
+<Accordion title="Profile Management Routes">
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/profile` | `profile.edit` | `ProfileController@edit` | Edit profile form |
+| PATCH | `/profile` | `profile.update` | `ProfileController@update` | Update profile |
+| DELETE | `/profile` | `profile.destroy` | `ProfileController@destroy` | Delete profile |
+
+```php
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+```
+
+</Accordion>
+
+---
+
+## Root Route
+
+| Method | URI | Description |
+|--------|-----|-------------|
+| GET | `/` | Returns login view |
+
+```php
+Route::get('/', function () {
+    return view('login');
+});
+```
+
+---
+
+## Middleware Reference
+
+<CardGroup cols={2}>
+
+<Card title="auth" icon="lock">
+Requires user authentication. Redirects to login if not authenticated.
+</Card>
+
+<Card title="verified" icon="circle-check">
+Requires email verification. Redirects to email verification notice if not verified.
+</Card>
+
+<Card title="role" icon="user-shield">
+Restricts access based on user roles. Multiple roles can be specified using pipe separator (e.g., `role:admin|encargado`).
+</Card>
+
+<Card title="guest" icon="user">
+Only allows unauthenticated users. Used for login/registration routes.
+</Card>
+
+</CardGroup>
+
+---
+
+## Role Hierarchy
+
+The application uses the following roles:
+
+- **admin** - Full system access including user and role management
+- **encargado** - Access to casos, conciliacion, and clientes
+- **abogado** - Access to casos and clientes
+- **asistente** - Access to conciliacion and clientes
+
+<Tip>
+Use the route helper `route('route.name', ['param' => 'value'])` to generate URLs for these routes in your application.
+</Tip>

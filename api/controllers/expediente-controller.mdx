@@ -1,0 +1,666 @@
+---
+title: 'ExpedienteController'
+description: 'Controller for managing conciliation expedientes including CRUD operations and relationship management with subject matters, invited parties, and conciliators'
+---
+
+## Overview
+
+The `ExpedienteController` manages conciliation expedientes (case files) in the Sistema de Abogados application. It handles expediente creation, updates, deletion, search functionality, and relationship management with subject matters (submaterias), invited parties, and conciliators.
+
+**Namespace:** `App\Http\Controllers`
+
+**Extends:** `Controller`
+
+## Dependencies
+
+The controller uses the following models:
+- `Expedientes` - Main expediente model
+- `Cliente` - Client model
+- `Submaterias` - Subject matter model
+- `InvitadoConciliacion` - Invited party model
+- `Conciliador` - Conciliator model
+- `Expediente_has_submateria` - Expediente-Submateria pivot model
+- `expediente_has_invitado` - Expediente-Invited party pivot model
+- `Expediente_has_conciliador` - Expediente-Conciliator pivot model
+- `ExpedienteDocumento` - Expediente document model
+
+## Methods
+
+### index()
+
+Lists all expedientes with pagination and search functionality.
+
+**Purpose:** Display a paginated list of expedientes with optional search filtering
+
+**Parameters:** None (uses `request('search')` for search query)
+
+**Returns:** View `conciliacion.expediente.index` with expedientes, clients, and subject matters
+
+**Response Data:**
+<ResponseField name="expedientes" type="Collection">
+  Paginated collection of expedientes (5 per page)
+</ResponseField>
+<ResponseField name="clientes" type="Collection">
+  All clients for filtering/assignment
+</ResponseField>
+<ResponseField name="ex_submaterias" type="Collection">
+  All expediente-submateria relationships
+</ResponseField>
+
+**Code Example:**
+```php
+public function index()
+{
+    $expedientes = Expedientes::search(request('search'))->paginate(5);
+    $clientes = Cliente::all();
+    $ex_submaterias = Expediente_has_submateria::all();
+    return view('conciliacion.expediente.index', 
+        compact('expedientes','clientes','ex_submaterias'));
+}
+```
+
+**Route:** `conciliacion.expediente.index`
+
+---
+
+### create()
+
+Displays the expediente creation form.
+
+**Purpose:** Show the form for creating a new expediente
+
+**Parameters:** None
+
+**Returns:** View `conciliacion.expediente.create` with clients
+
+**Response Data:**
+<ResponseField name="clientes" type="Collection">
+  All available clients to assign to the expediente
+</ResponseField>
+
+**Code Example:**
+```php
+public function create()
+{
+    $clientes = Cliente::all();
+    return view('conciliacion.expediente.create', compact('clientes'));
+}
+```
+
+**Route:** `conciliacion.expediente.create`
+
+---
+
+### store()
+
+Creates a new expediente with validation.
+
+**Purpose:** Store a new expediente in the database
+
+**Request Parameters:**
+<ParamField path="n_expediente" type="string" required>
+  Expediente number or identifier
+</ParamField>
+<ParamField path="fecha_inicio" type="date" required>
+  Expediente start date
+</ParamField>
+<ParamField path="fecha_final" type="date">
+  Expediente end date (optional)
+</ParamField>
+<ParamField path="descripcion" type="text">
+  Expediente description (optional)
+</ParamField>
+<ParamField path="estado" type="string" required>
+  Expediente status
+</ParamField>
+<ParamField path="id_cliente" type="integer" required>
+  Client ID associated with the expediente
+</ParamField>
+
+**Validation Rules:**
+```php
+[
+    'n_expediente' => 'required', 
+    'fecha_inicio' => 'required',
+    'fecha_final' => 'nullable',
+    'descripcion' => 'nullable',
+    'estado' => 'required',
+    'id_cliente' => 'required'
+]
+```
+
+**Returns:** Redirect to `conciliacion.expediente.index` with success message
+
+**Success Message:** "Expediente registrado correctamente."
+
+**Code Example:**
+```php
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'n_expediente' => 'required', 
+        'fecha_inicio' => 'required',
+        'fecha_final' => 'nullable',
+        'descripcion' => 'nullable',
+        'estado' => 'required',
+        'id_cliente' => 'required'
+    ]);
+    Expedientes::create($validated);
+    return to_route('conciliacion.expediente.index')
+        ->with('message', 'Expediente registrado correctamente.');
+}
+```
+
+**Route:** `conciliacion.expediente.store`
+
+---
+
+### show()
+
+Displays detailed information for a specific expediente.
+
+**Purpose:** Show complete expediente details including subject matters, invited parties, conciliators, and documents
+
+**Parameters:**
+<ParamField path="expediente" type="Expedientes" required>
+  Expediente model instance (route model binding)
+</ParamField>
+
+**Returns:** View `conciliacion.expediente.expediente` with expediente data and related entities
+
+**Response Data:**
+<ResponseField name="expediente" type="Expedientes">
+  The expediente instance
+</ResponseField>
+<ResponseField name="submaterias" type="Collection">
+  All available subject matters
+</ResponseField>
+<ResponseField name="invitados" type="Collection">
+  All invited parties
+</ResponseField>
+<ResponseField name="conciliadores" type="Collection">
+  All conciliators
+</ResponseField>
+<ResponseField name="ex_invitados" type="Collection">
+  Invited parties assigned to expedientes
+</ResponseField>
+<ResponseField name="ex_submaterias" type="Collection">
+  Subject matters assigned to expedientes
+</ResponseField>
+<ResponseField name="ex_conciliadores" type="Collection">
+  Conciliators assigned to expedientes
+</ResponseField>
+<ResponseField name="ex_documentos" type="Collection">
+  Documents associated with expedientes
+</ResponseField>
+
+**Code Example:**
+```php
+public function show(Expedientes $expediente)
+{
+    $submaterias = Submaterias::all();
+    $invitados = InvitadoConciliacion::all();
+    $conciliadores = Conciliador::all();
+    $ex_invitados = expediente_has_invitado::all();
+    $ex_submaterias = Expediente_has_submateria::all();
+    $ex_conciliadores = Expediente_has_conciliador::all();
+    $ex_documentos = ExpedienteDocumento::all();
+    return view('conciliacion.expediente.expediente', 
+        compact('expediente','submaterias','invitados',
+                'conciliadores','ex_invitados','ex_submaterias',
+                'ex_documentos','ex_conciliadores'));
+}
+```
+
+**Route:** `conciliacion.expediente.show`
+
+---
+
+### edit()
+
+Displays the expediente edit form.
+
+**Purpose:** Show the form for editing an existing expediente
+
+**Parameters:**
+<ParamField path="expediente" type="Expedientes" required>
+  Expediente model instance (route model binding)
+</ParamField>
+
+**Returns:** View `conciliacion.expediente.edit` with expediente and clients
+
+**Response Data:**
+<ResponseField name="expediente" type="Expedientes">
+  The expediente instance to edit
+</ResponseField>
+<ResponseField name="clientes" type="Collection">
+  All available clients
+</ResponseField>
+
+**Code Example:**
+```php
+public function edit(Expedientes $expediente)
+{
+    $clientes = Cliente::all();
+    return view('conciliacion.expediente.edit', 
+        compact('expediente','clientes'));
+}
+```
+
+**Route:** `conciliacion.expediente.edit`
+
+---
+
+### update()
+
+Updates an existing expediente with validation.
+
+**Purpose:** Update expediente information in the database
+
+**Parameters:**
+<ParamField path="expediente" type="Expedientes" required>
+  Expediente model instance (route model binding)
+</ParamField>
+
+**Request Parameters:**
+<ParamField path="n_expediente" type="string" required>
+  Expediente number or identifier
+</ParamField>
+<ParamField path="fecha_inicio" type="date" required>
+  Expediente start date
+</ParamField>
+<ParamField path="fecha_final" type="date">
+  Expediente end date (optional)
+</ParamField>
+<ParamField path="descripcion" type="text">
+  Expediente description (optional)
+</ParamField>
+<ParamField path="estado" type="string" required>
+  Expediente status
+</ParamField>
+<ParamField path="id_cliente" type="integer">
+  Client ID (optional on update)
+</ParamField>
+
+**Validation Rules:**
+```php
+[
+    'n_expediente' => 'required', 
+    'fecha_inicio' => 'required',
+    'fecha_final' => 'nullable',
+    'descripcion' => 'nullable',
+    'estado' => 'required',
+    'id_cliente' => 'nullable'
+]
+```
+
+**Returns:** Redirect to `conciliacion.expediente.index` with success message
+
+**Success Message:** "Expediente Actualisado correctamente."
+
+**Code Example:**
+```php
+public function update(Request $request, Expedientes $expediente)
+{
+    $validated = $request->validate([
+        'n_expediente' => 'required', 
+        'fecha_inicio' => 'required',
+        'fecha_final' => 'nullable',
+        'descripcion' => 'nullable',
+        'estado' => 'required',
+        'id_cliente' => 'nullable'
+    ]);
+    $expediente->update($validated);
+    return to_route('conciliacion.expediente.index')
+        ->with('message', 'Expediente Actualisado correctamente.');
+}
+```
+
+**Route:** `conciliacion.expediente.update`
+
+---
+
+### destroy()
+
+Deletes an expediente from the database.
+
+**Purpose:** Remove an expediente with foreign key constraint handling
+
+**Parameters:**
+<ParamField path="expediente" type="Expedientes" required>
+  Expediente model instance (route model binding)
+</ParamField>
+
+**Returns:** 
+- Success: Redirect to `conciliacion.expediente.index` with success message
+- Error: Back with alert message if constraints exist
+
+**Success Message:** "Expediente eliminado correctamente."
+
+**Error Message:** "No puede eliminar! Tiene asignado recursos."
+
+**Code Example:**
+```php
+public function destroy(Expedientes $expediente)
+{
+    try{
+        $expediente->delete();
+        return to_route('conciliacion.expediente.index')
+            ->with('messagedestroy', 'Expediente eliminado correctamente.');
+    }catch(\Exception $e){
+        return back()->with('messageAlert', 
+            'No puede eliminar! Tiene asignado recursos.');
+    }
+}
+```
+
+**Route:** `conciliacion.expediente.destroy`
+
+**Notes:** 
+- Uses try-catch to handle foreign key constraint violations
+- Related entities must be removed before deleting the expediente
+
+---
+
+### assignSubmateria()
+
+Assigns a subject matter (submateria) to an expediente.
+
+**Purpose:** Create a relationship between an expediente and a subject matter
+
+**Parameters:**
+<ParamField path="expediente" type="Expedientes" required>
+  Expediente model instance (route model binding)
+</ParamField>
+
+**Request Parameters:**
+<ParamField path="id_submateria" type="integer" required>
+  Subject matter ID to assign
+</ParamField>
+
+**Returns:** Back to previous page with success message
+
+**Success Message:** "Submateria asignado."
+
+**Code Example:**
+```php
+public function assignSubmateria(Request $request, Expedientes $expediente)
+{
+    $validated = $request->input();
+    $validated['id_expediente'] = $expediente->id;
+    Expediente_has_submateria::create($validated);
+    return back()->with('message', 'Submateria asignado.');
+}
+```
+
+**Route:** Custom route for assigning subject matter
+
+**Notes:**
+- Automatically sets `id_expediente` from the route parameter
+- Creates a pivot table entry
+
+---
+
+### removeSubmateria()
+
+Removes a subject matter assignment from an expediente.
+
+**Purpose:** Delete the relationship between an expediente and a subject matter
+
+**Parameters:**
+<ParamField path="ex_submateria" type="Expediente_has_submateria" required>
+  Expediente-submateria pivot model instance (route model binding)
+</ParamField>
+
+**Returns:** Back to previous page with success message
+
+**Success Message:** "Submateria Removido."
+
+**Code Example:**
+```php
+public function removeSubmateria(Expediente_has_submateria $ex_submateria)
+{
+    $ex_submateria->delete();
+    return back()->with('messagedestroy', 'Submateria Removido.');
+}
+```
+
+**Route:** Custom route for removing subject matter
+
+---
+
+### assignInvitado()
+
+Assigns an invited party to an expediente.
+
+**Purpose:** Create a relationship between an expediente and an invited party
+
+**Parameters:**
+<ParamField path="expediente" type="Expedientes" required>
+  Expediente model instance (route model binding)
+</ParamField>
+
+**Request Parameters:**
+<ParamField path="id_invitado" type="integer" required>
+  Invited party ID to assign
+</ParamField>
+
+**Returns:** Back to previous page with success message
+
+**Success Message:** "invitado asignado."
+
+**Code Example:**
+```php
+public function assignInvitado(Request $request, Expedientes $expediente)
+{
+    $validated = $request->input();
+    $validated['id_expediente'] = $expediente->id;
+    expediente_has_invitado::create($validated);
+    return back()->with('message', 'invitado asignado.');
+}
+```
+
+**Route:** Custom route for assigning invited party
+
+**Notes:**
+- Automatically sets `id_expediente` from the route parameter
+- Creates a pivot table entry
+
+---
+
+### removeInvitado()
+
+Removes an invited party assignment from an expediente.
+
+**Purpose:** Delete the relationship between an expediente and an invited party
+
+**Parameters:**
+<ParamField path="ex_invitado" type="expediente_has_invitado" required>
+  Expediente-invited party pivot model instance (route model binding)
+</ParamField>
+
+**Returns:** Back to previous page with success message
+
+**Success Message:** "invitado Removido."
+
+**Code Example:**
+```php
+public function removeInvitado(expediente_has_invitado $ex_invitado)
+{
+    $ex_invitado->delete();
+    return back()->with('messagedestroy', 'invitado Removido.');
+}
+```
+
+**Route:** Custom route for removing invited party
+
+---
+
+### assignConciliador()
+
+Assigns a conciliator to an expediente.
+
+**Purpose:** Create a relationship between an expediente and a conciliator
+
+**Parameters:**
+<ParamField path="expediente" type="Expedientes" required>
+  Expediente model instance (route model binding)
+</ParamField>
+
+**Request Parameters:**
+<ParamField path="id_conciliador" type="integer" required>
+  Conciliator ID to assign
+</ParamField>
+
+**Returns:** Back to previous page with success message
+
+**Success Message:** "Conciliador asignado."
+
+**Code Example:**
+```php
+public function assignConciliador(Request $request, Expedientes $expediente)
+{
+    $validated = $request->input();
+    $validated['id_expediente'] = $expediente->id;
+    Expediente_has_conciliador::create($validated);
+    return back()->with('message', 'Conciliador asignado.');
+}
+```
+
+**Route:** Custom route for assigning conciliator
+
+**Notes:**
+- Automatically sets `id_expediente` from the route parameter
+- Creates a pivot table entry
+
+---
+
+### removeConciliador()
+
+Removes a conciliator assignment from an expediente.
+
+**Purpose:** Delete the relationship between an expediente and a conciliator
+
+**Parameters:**
+<ParamField path="ex_conciliador" type="Expediente_has_conciliador" required>
+  Expediente-conciliator pivot model instance (route model binding)
+</ParamField>
+
+**Returns:** Back to previous page with success message
+
+**Success Message:** "Conciliador Removido."
+
+**Code Example:**
+```php
+public function removeConciliador(Expediente_has_conciliador $ex_conciliador)
+{
+    $ex_conciliador->delete();
+    return back()->with('messagedestroy', 'Conciliador Removido.');
+}
+```
+
+**Route:** Custom route for removing conciliator
+
+---
+
+## Usage Examples
+
+### Creating a New Expediente
+
+```php
+// POST /conciliacion/expedientes
+$data = [
+    'n_expediente' => 'EXP-2026-001',
+    'fecha_inicio' => '2026-03-10',
+    'fecha_final' => null,
+    'descripcion' => 'Proceso de conciliación extrajudicial',
+    'estado' => 'En Proceso',
+    'id_cliente' => 7
+];
+```
+
+### Updating an Expediente
+
+```php
+// PUT /conciliacion/expedientes/{expediente}
+$data = [
+    'n_expediente' => 'EXP-2026-001',
+    'fecha_inicio' => '2026-03-10',
+    'fecha_final' => '2026-06-15',
+    'descripcion' => 'Conciliación finalizada exitosamente',
+    'estado' => 'Concluido',
+    'id_cliente' => 7
+];
+```
+
+### Assigning a Subject Matter
+
+```php
+// POST /conciliacion/expedientes/{expediente}/assign-submateria
+$data = [
+    'id_submateria' => 5
+];
+```
+
+### Assigning an Invited Party
+
+```php
+// POST /conciliacion/expedientes/{expediente}/assign-invitado
+$data = [
+    'id_invitado' => 12
+];
+```
+
+### Assigning a Conciliator
+
+```php
+// POST /conciliacion/expedientes/{expediente}/assign-conciliador
+$data = [
+    'id_conciliador' => 3
+];
+```
+
+### Searching Expedientes
+
+```php
+// GET /conciliacion/expedientes?search=EXP-2026
+// The search parameter is automatically handled by the Expedientes model
+```
+
+## Error Handling
+
+### Deletion Constraints
+
+When attempting to delete an expediente with related records:
+
+```php
+// If foreign key constraints or assigned resources exist
+return back()->with('messageAlert', 
+    'No puede eliminar! Tiene asignado recursos.');
+```
+
+### Validation Errors
+
+Laravel's validation will automatically return error messages for:
+- Missing required fields (n_expediente, fecha_inicio, estado, id_cliente)
+- Invalid data formats
+- Type mismatches
+
+## Related Models
+
+- **Expedientes** - Main expediente model at `/home/daytona/workspace/source/app/Models/Expedientes.php`
+- **Cliente** - Client model
+- **Submaterias** - Subject matter categorization
+- **InvitadoConciliacion** - Parties invited to conciliation
+- **Conciliador** - Conciliators assigned to cases
+- **ExpedienteDocumento** - Documents attached to expedientes
+
+## Workflow
+
+1. **Create Expediente** - Start with basic information and client assignment
+2. **Assign Subject Matters** - Categorize the expediente by legal subject
+3. **Assign Invited Parties** - Add all parties involved in conciliation
+4. **Assign Conciliator** - Designate the mediator for the process
+5. **Upload Documents** - Attach relevant documentation
+6. **Update Status** - Track progress through various states
+7. **Conclude or Archive** - Mark as completed when resolved

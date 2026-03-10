@@ -1,0 +1,661 @@
+---
+title: 'Configuration'
+description: 'Configure Sistema de Abogados for your environment'
+---
+
+## Environment Configuration
+
+Sistema de Abogados uses Laravel's environment configuration system. All configuration is managed through the `.env` file located in the application root directory.
+
+<Note>
+  Never commit your `.env` file to version control. It contains sensitive credentials and environment-specific settings.
+</Note>
+
+## Application Settings
+
+### Basic Application Configuration
+
+Configure the core application settings in your `.env` file:
+
+```bash .env
+APP_NAME="Sistema de Abogados"
+APP_ENV=local
+APP_KEY=base64:generated_key_here
+APP_DEBUG=true
+APP_URL=http://localhost:8000
+```
+
+<ParamField path="APP_NAME" type="string" default="Laravel">
+  The name of your application, displayed in emails and the interface.
+</ParamField>
+
+<ParamField path="APP_ENV" type="string" default="local">
+  The application environment. Options: `local`, `development`, `staging`, `production`
+  
+  <Warning>
+    Set to `production` in production environments for optimal security and performance.
+  </Warning>
+</ParamField>
+
+<ParamField path="APP_KEY" type="string" required>
+  Application encryption key. Generate using `php artisan key:generate`
+  
+  <Warning>
+    Never share this key publicly. It encrypts sessions and sensitive data.
+  </Warning>
+</ParamField>
+
+<ParamField path="APP_DEBUG" type="boolean" default="true">
+  Enable debug mode. Set to `false` in production to prevent sensitive information leakage.
+</ParamField>
+
+<ParamField path="APP_URL" type="string" default="http://localhost">
+  The base URL of your application. Used for generating absolute URLs.
+</ParamField>
+
+### Logging Configuration
+
+```bash .env
+LOG_CHANNEL=stack
+LOG_DEPRECATIONS_CHANNEL=null
+LOG_LEVEL=debug
+```
+
+<ParamField path="LOG_CHANNEL" type="string" default="stack">
+  Log channel to use. Options: `stack`, `single`, `daily`, `slack`, `stderr`, `syslog`
+</ParamField>
+
+<ParamField path="LOG_LEVEL" type="string" default="debug">
+  Minimum log level. Options: `debug`, `info`, `notice`, `warning`, `error`, `critical`, `alert`, `emergency`
+  
+  <Tip>
+    Use `warning` or `error` in production to reduce log verbosity.
+  </Tip>
+</ParamField>
+
+## Database Configuration
+
+### MySQL Connection
+
+Configure your MySQL database connection:
+
+```bash .env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=sesionv2
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+<ParamField path="DB_CONNECTION" type="string" default="mysql">
+  Database driver. Options: `mysql`, `pgsql`, `sqlite`, `sqlsrv`
+</ParamField>
+
+<ParamField path="DB_HOST" type="string" default="127.0.0.1">
+  Database host address. Use `127.0.0.1` for local development.
+</ParamField>
+
+<ParamField path="DB_PORT" type="integer" default="3306">
+  Database port. MySQL default is `3306`, PostgreSQL is `5432`.
+</ParamField>
+
+<ParamField path="DB_DATABASE" type="string" default="sesionv2" required>
+  Name of your database. Ensure this database exists before running migrations.
+</ParamField>
+
+<ParamField path="DB_USERNAME" type="string" default="root" required>
+  Database username with appropriate permissions.
+</ParamField>
+
+<ParamField path="DB_PASSWORD" type="string">
+  Database password. Leave empty if no password is set (not recommended for production).
+</ParamField>
+
+### Database Configuration File
+
+Advanced database settings are configured in `config/database.php`:
+
+<CodeGroup>
+```php config/database.php
+'mysql' => [
+    'driver' => 'mysql',
+    'host' => env('DB_HOST', '127.0.0.1'),
+    'port' => env('DB_PORT', '3306'),
+    'database' => env('DB_DATABASE', 'forge'),
+    'username' => env('DB_USERNAME', 'forge'),
+    'password' => env('DB_PASSWORD', ''),
+    'charset' => 'utf8mb4',
+    'collation' => 'utf8mb4_unicode_ci',
+    'prefix' => '',
+    'strict' => true,
+    'engine' => null,
+],
+```
+
+```php PostgreSQL Alternative
+'pgsql' => [
+    'driver' => 'pgsql',
+    'host' => env('DB_HOST', '127.0.0.1'),
+    'port' => env('DB_PORT', '5432'),
+    'database' => env('DB_DATABASE', 'forge'),
+    'username' => env('DB_USERNAME', 'forge'),
+    'password' => env('DB_PASSWORD', ''),
+    'charset' => 'utf8',
+    'prefix' => '',
+    'sslmode' => 'prefer',
+],
+```
+</CodeGroup>
+
+<Note>
+  The application uses `utf8mb4` character set by default, which supports emoji and special characters.
+</Note>
+
+## Mail Configuration
+
+Configure email sending for notifications and user communications:
+
+```bash .env
+MAIL_MAILER=smtp
+MAIL_HOST=mailpit
+MAIL_PORT=1025
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS="hello@example.com"
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+<ParamField path="MAIL_MAILER" type="string" default="smtp">
+  Mail driver. Options: `smtp`, `sendmail`, `mailgun`, `ses`, `postmark`, `log`, `array`
+</ParamField>
+
+<ParamField path="MAIL_HOST" type="string" default="smtp.mailgun.org">
+  SMTP server hostname. For development, use `mailpit` or `mailtrap.io`.
+</ParamField>
+
+<ParamField path="MAIL_PORT" type="integer" default="587">
+  SMTP port. Common ports: `587` (TLS), `465` (SSL), `25` (unencrypted)
+</ParamField>
+
+<ParamField path="MAIL_ENCRYPTION" type="string">
+  Encryption type. Options: `tls`, `ssl`, `null`
+</ParamField>
+
+<ParamField path="MAIL_FROM_ADDRESS" type="string" required>
+  Default "from" email address for all outgoing emails.
+</ParamField>
+
+### Production Mail Configuration Examples
+
+<Tabs>
+  <Tab title="Gmail">
+    ```bash .env
+    MAIL_MAILER=smtp
+    MAIL_HOST=smtp.gmail.com
+    MAIL_PORT=587
+    MAIL_USERNAME=your-email@gmail.com
+    MAIL_PASSWORD=your-app-password
+    MAIL_ENCRYPTION=tls
+    MAIL_FROM_ADDRESS=your-email@gmail.com
+    MAIL_FROM_NAME="Sistema de Abogados"
+    ```
+    
+    <Note>
+      Use an [App Password](https://support.google.com/accounts/answer/185833) instead of your regular Gmail password.
+    </Note>
+  </Tab>
+  
+  <Tab title="Mailgun">
+    ```bash .env
+    MAIL_MAILER=mailgun
+    MAILGUN_DOMAIN=your-domain.com
+    MAILGUN_SECRET=your-mailgun-api-key
+    MAIL_FROM_ADDRESS=noreply@your-domain.com
+    MAIL_FROM_NAME="Sistema de Abogados"
+    ```
+  </Tab>
+  
+  <Tab title="AWS SES">
+    ```bash .env
+    MAIL_MAILER=ses
+    AWS_ACCESS_KEY_ID=your-access-key
+    AWS_SECRET_ACCESS_KEY=your-secret-key
+    AWS_DEFAULT_REGION=us-east-1
+    MAIL_FROM_ADDRESS=noreply@your-domain.com
+    MAIL_FROM_NAME="Sistema de Abogados"
+    ```
+  </Tab>
+</Tabs>
+
+## Cache Configuration
+
+Configure caching for improved performance:
+
+```bash .env
+CACHE_DRIVER=file
+SESSION_DRIVER=file
+QUEUE_CONNECTION=sync
+```
+
+<ParamField path="CACHE_DRIVER" type="string" default="file">
+  Cache storage driver. Options: `file`, `redis`, `memcached`, `database`, `array`
+  
+  <Tip>
+    Use `redis` or `memcached` in production for better performance.
+  </Tip>
+</ParamField>
+
+<ParamField path="SESSION_DRIVER" type="string" default="file">
+  Session storage driver. Options: `file`, `cookie`, `database`, `redis`, `memcached`, `array`
+</ParamField>
+
+<ParamField path="SESSION_LIFETIME" type="integer" default="120">
+  Session lifetime in minutes. Default is 2 hours.
+</ParamField>
+
+### Redis Configuration (Optional)
+
+For high-performance caching and session storage:
+
+```bash .env
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+```
+
+<Note>
+  Install the Redis PHP extension: `pecl install redis`
+</Note>
+
+## Queue Configuration
+
+Configure background job processing:
+
+```bash .env
+QUEUE_CONNECTION=sync
+```
+
+<ParamField path="QUEUE_CONNECTION" type="string" default="sync">
+  Queue driver. Options: `sync`, `database`, `redis`, `sqs`, `beanstalkd`, `null`
+</ParamField>
+
+### Queue Driver Options
+
+<Tabs>
+  <Tab title="Sync (Development)">
+    ```bash .env
+    QUEUE_CONNECTION=sync
+    ```
+    
+    Jobs execute immediately. Good for development, not recommended for production.
+  </Tab>
+  
+  <Tab title="Database">
+    ```bash .env
+    QUEUE_CONNECTION=database
+    ```
+    
+    Requires the `jobs` table:
+    ```bash
+    php artisan queue:table
+    php artisan migrate
+    ```
+    
+    Start the worker:
+    ```bash
+    php artisan queue:work
+    ```
+  </Tab>
+  
+  <Tab title="Redis (Recommended)">
+    ```bash .env
+    QUEUE_CONNECTION=redis
+    REDIS_QUEUE=default
+    ```
+    
+    Start the worker:
+    ```bash
+    php artisan queue:work redis
+    ```
+  </Tab>
+</Tabs>
+
+## Spatie Permission Configuration
+
+The application uses **Spatie Laravel Permission** for role-based access control. Configuration is located in `config/permission.php`:
+
+### Models
+
+```php config/permission.php
+'models' => [
+    'permission' => Spatie\Permission\Models\Permission::class,
+    'role' => Spatie\Permission\Models\Role::class,
+],
+```
+
+### Table Names
+
+```php config/permission.php
+'table_names' => [
+    'roles' => 'roles',
+    'permissions' => 'permissions',
+    'model_has_permissions' => 'model_has_permissions',
+    'model_has_roles' => 'model_has_roles',
+    'role_has_permissions' => 'role_has_permissions',
+],
+```
+
+### Cache Configuration
+
+```php config/permission.php
+'cache' => [
+    'expiration_time' => \DateInterval::createFromDateString('24 hours'),
+    'key' => 'spatie.permission.cache',
+    'store' => 'default',
+],
+```
+
+<Tip>
+  Clear permission cache after updating roles or permissions:
+  
+  ```bash
+  php artisan permission:cache-reset
+  ```
+</Tip>
+
+### Default Roles
+
+The system includes three predefined roles (seeded via `RoleSeeder`):
+
+<CardGroup cols={3}>
+  <Card title="Admin" icon="user-shield">
+    Full system access and management
+  </Card>
+  <Card title="Abogado" icon="user-tie">
+    Lawyer role with case management access
+  </Card>
+  <Card title="Asistente" icon="user">
+    Assistant role with limited permissions
+  </Card>
+</CardGroup>
+
+## Laravel Scout Configuration
+
+**Laravel Scout** provides full-text search functionality. Configuration is in `config/scout.php`:
+
+```php config/scout.php
+'driver' => env('SCOUT_DRIVER', 'algolia'),
+'queue' => env('SCOUT_QUEUE', false),
+'prefix' => env('SCOUT_PREFIX', ''),
+```
+
+### Scout Driver Options
+
+<Tabs>
+  <Tab title="Database (Simple)">
+    ```bash .env
+    SCOUT_DRIVER=database
+    ```
+    
+    Uses database LIKE queries. No additional setup required.
+  </Tab>
+  
+  <Tab title="Algolia">
+    ```bash .env
+    SCOUT_DRIVER=algolia
+    ALGOLIA_APP_ID=your-app-id
+    ALGOLIA_SECRET=your-admin-key
+    ```
+    
+    Cloud-hosted search engine. Requires Algolia account.
+  </Tab>
+  
+  <Tab title="Meilisearch">
+    ```bash .env
+    SCOUT_DRIVER=meilisearch
+    MEILISEARCH_HOST=http://localhost:7700
+    MEILISEARCH_KEY=your-master-key
+    ```
+    
+    Open-source search engine. Requires Meilisearch installation.
+  </Tab>
+  
+  <Tab title="Collection (Development)">
+    ```bash .env
+    SCOUT_DRIVER=collection
+    ```
+    
+    In-memory search. Only for development/testing.
+  </Tab>
+</Tabs>
+
+### Indexing Models
+
+Index your searchable models:
+
+```bash
+# Import all records
+php artisan scout:import "App\Models\Cliente"
+php artisan scout:import "App\Models\Expediente"
+
+# Flush indices
+php artisan scout:flush "App\Models\Cliente"
+```
+
+## Broadcasting Configuration
+
+For real-time features:
+
+```bash .env
+BROADCAST_DRIVER=log
+```
+
+<ParamField path="BROADCAST_DRIVER" type="string" default="log">
+  Broadcasting driver. Options: `pusher`, `redis`, `log`, `null`
+</ParamField>
+
+### Pusher Configuration (Optional)
+
+```bash .env
+PUSHER_APP_ID=your-app-id
+PUSHER_APP_KEY=your-app-key
+PUSHER_APP_SECRET=your-app-secret
+PUSHER_APP_CLUSTER=mt1
+
+VITE_PUSHER_APP_KEY="${PUSHER_APP_KEY}"
+VITE_PUSHER_HOST="${PUSHER_HOST}"
+VITE_PUSHER_PORT="${PUSHER_PORT}"
+VITE_PUSHER_SCHEME="${PUSHER_SCHEME}"
+VITE_PUSHER_APP_CLUSTER="${PUSHER_APP_CLUSTER}"
+```
+
+## File Storage Configuration
+
+```bash .env
+FILESYSTEM_DISK=local
+```
+
+<ParamField path="FILESYSTEM_DISK" type="string" default="local">
+  Default filesystem disk. Options: `local`, `public`, `s3`
+</ParamField>
+
+### AWS S3 Configuration (Optional)
+
+```bash .env
+AWS_ACCESS_KEY_ID=your-access-key-id
+AWS_SECRET_ACCESS_KEY=your-secret-access-key
+AWS_DEFAULT_REGION=us-east-1
+AWS_BUCKET=your-bucket-name
+AWS_USE_PATH_STYLE_ENDPOINT=false
+```
+
+<Tip>
+  For document storage, configure the public disk:
+  
+  ```bash
+  php artisan storage:link
+  ```
+  
+  This creates a symbolic link from `public/storage` to `storage/app/public`.
+</Tip>
+
+## Security Configuration
+
+### Authentication
+
+The application uses **Laravel Sanctum** for authentication:
+
+```php config/sanctum.php
+'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
+    '%s%s',
+    'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1',
+    Sanctum::currentApplicationUrlWithPort()
+))),
+```
+
+### CORS Configuration
+
+Configure Cross-Origin Resource Sharing in `config/cors.php`:
+
+```php config/cors.php
+'paths' => ['api/*', 'sanctum/csrf-cookie'],
+'allowed_origins' => ['*'],
+'allowed_methods' => ['*'],
+'allowed_headers' => ['*'],
+```
+
+<Warning>
+  In production, restrict `allowed_origins` to your actual domain instead of using `*`.
+</Warning>
+
+## Performance Optimization
+
+### Production Optimization Commands
+
+Run these commands before deploying to production:
+
+```bash
+# Cache configuration
+php artisan config:cache
+
+# Cache routes
+php artisan route:cache
+
+# Cache views
+php artisan view:cache
+
+# Optimize autoloader
+composer install --optimize-autoloader --no-dev
+```
+
+### Clear All Caches
+
+During development or after configuration changes:
+
+```bash
+# Clear all caches
+php artisan optimize:clear
+
+# Or individually
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+php artisan cache:clear
+```
+
+## Configuration Files Reference
+
+All configuration files are located in the `config/` directory:
+
+<CardGroup cols={2}>
+  <Card title="app.php" icon="gear">
+    Application name, environment, debug mode, locale, timezone
+  </Card>
+  <Card title="auth.php" icon="lock">
+    Authentication guards, providers, password reset settings
+  </Card>
+  <Card title="database.php" icon="database">
+    Database connections, migrations table, Redis configuration
+  </Card>
+  <Card title="mail.php" icon="envelope">
+    Mail drivers, SMTP settings, from address
+  </Card>
+  <Card title="cache.php" icon="bolt">
+    Cache stores, drivers, prefixes
+  </Card>
+  <Card title="queue.php" icon="list">
+    Queue connections, failed job settings
+  </Card>
+  <Card title="permission.php" icon="shield">
+    Spatie permission models, tables, cache
+  </Card>
+  <Card title="scout.php" icon="magnifying-glass">
+    Search driver, queue, Algolia/Meilisearch settings
+  </Card>
+  <Card title="session.php" icon="clock">
+    Session driver, lifetime, cookie settings
+  </Card>
+  <Card title="filesystems.php" icon="folder">
+    Storage disks, S3 configuration
+  </Card>
+</CardGroup>
+
+## Environment-Specific Configuration
+
+<Tabs>
+  <Tab title="Development">
+    ```bash .env
+    APP_ENV=local
+    APP_DEBUG=true
+    LOG_LEVEL=debug
+    
+    CACHE_DRIVER=file
+    SESSION_DRIVER=file
+    QUEUE_CONNECTION=sync
+    
+    MAIL_MAILER=log
+    ```
+  </Tab>
+  
+  <Tab title="Staging">
+    ```bash .env
+    APP_ENV=staging
+    APP_DEBUG=false
+    LOG_LEVEL=info
+    
+    CACHE_DRIVER=redis
+    SESSION_DRIVER=redis
+    QUEUE_CONNECTION=redis
+    
+    MAIL_MAILER=smtp
+    ```
+  </Tab>
+  
+  <Tab title="Production">
+    ```bash .env
+    APP_ENV=production
+    APP_DEBUG=false
+    LOG_LEVEL=warning
+    
+    CACHE_DRIVER=redis
+    SESSION_DRIVER=redis
+    QUEUE_CONNECTION=redis
+    
+    SCOUT_DRIVER=meilisearch
+    MAIL_MAILER=smtp
+    ```
+  </Tab>
+</Tabs>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="User Guide" icon="book" href="/user-guide">
+    Learn how to use the system features
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference">
+    Explore the API endpoints
+  </Card>
+</CardGroup>

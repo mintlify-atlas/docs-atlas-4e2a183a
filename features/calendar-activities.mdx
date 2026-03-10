@@ -1,0 +1,582 @@
+---
+title: 'Calendar & Activities'
+description: 'Schedule and track activities for general tasks, cases, and expedientes with FullCalendar.js integration'
+icon: 'calendar-days'
+---
+
+## Overview
+
+The Calendar & Activities module provides comprehensive scheduling and tracking for all time-based activities in Sistema de Abogados. The system manages three distinct activity types: general activities, case-specific activities, and expediente-specific activities. All activities are visualized in a unified calendar interface powered by FullCalendar.js, with color coding to distinguish activity types.
+
+<CardGroup cols={2}>
+  <Card title="Unified Calendar View" icon="calendar">
+    View all activities in one calendar interface with FullCalendar.js integration and color-coded event types.
+  </Card>
+  <Card title="Three Activity Types" icon="layer-group">
+    Manage general activities, case activities (ActividadCaso), and expediente activities (ActividadConciliacion) with type-specific features.
+  </Card>
+  <Card title="Searchable Activities" icon="magnifying-glass">
+    All activity types use Laravel Scout for fast, accurate searching across titles, descriptions, and dates.
+  </Card>
+  <Card title="Role-Based Scheduling" icon="user-shield">
+    Different team roles can create and manage activities appropriate to their workflow (cases vs expedientes).
+  </Card>
+</CardGroup>
+
+## Activity Types
+
+The system manages three distinct activity categories:
+
+### General Activities (Actividad)
+- **Purpose**: Standalone activities not linked to cases or expedientes
+- **Examples**: Office meetings, training sessions, administrative tasks, holidays
+- **Calendar Color**: Red (`rgb(239, 68, 68)`)
+- **Access**: All authenticated users
+
+### Case Activities (ActividadCaso)
+- **Purpose**: Activities specifically related to legal cases
+- **Examples**: Court hearings, client meetings, filing deadlines, case reviews
+- **Calendar Color**: Green (`rgb(34, 197, 94)`)
+- **Access**: Encargado, Admin, Abogado
+- **Linked To**: Specific caso via `id_caso`
+
+### Expediente Activities (ActividadConciliacion)
+- **Purpose**: Activities related to conciliation expedientes
+- **Examples**: Conciliation sessions, party meetings, negotiation deadlines
+- **Calendar Color**: Blue (`rgb(59, 130, 246)`)
+- **Access**: Encargado, Admin, Asistente
+- **Linked To**: Specific expediente via `id_expediente`
+
+<Note>
+The color coding in the calendar helps users quickly identify activity types at a glance, improving schedule management and coordination.
+</Note>
+
+## Activity Data Structure
+
+### General Activities (Actividad)
+
+Each general activity contains:
+
+| Field | Description | Required |
+|-------|-------------|----------|
+| **titulo** | Activity title or name | Yes |
+| **descripcion** | Detailed description of the activity | Optional |
+| **direccion** | Location or address where activity occurs | Optional |
+| **fecha** | Activity date | Yes |
+| **hora** | Activity time | Yes |
+
+### Case Activities (ActividadCaso)
+
+Each case activity contains:
+
+| Field | Description | Required |
+|-------|-------------|----------|
+| **titulo** | Activity title | Yes |
+| **descripcion** | Activity description | Optional |
+| **direccion** | Location or address | Optional |
+| **fecha** | Activity date | Yes |
+| **hora** | Activity time | Yes |
+| **id_caso** | Associated case ID (foreign key) | Yes |
+
+### Expediente Activities (ActividadConciliacion)
+
+Each expediente activity contains:
+
+| Field | Description | Required |
+|-------|-------------|----------|
+| **titulo** | Activity title | Yes |
+| **descripcion** | Activity description | Optional |
+| **direccion** | Location or address | Optional |
+| **fecha** | Activity date | Yes |
+| **hora** | Activity time | Yes |
+| **id_expediente** | Associated expediente ID (foreign key) | Yes |
+
+<Tip>
+All three activity types share the same core fields (titulo, descripcion, direccion, fecha, hora), making them intuitive to create and manage regardless of type.
+</Tip>
+
+## Creating Activities
+
+### Creating General Activities
+
+1. **Navigate to Activities Module**
+   - Access via route: `/agenda/actividad`
+   - Click "Create New Activity"
+
+2. **Enter Activity Details**
+   - **Title** (`titulo`): Enter descriptive title
+   - **Description** (`descripcion`): Add detailed information
+   - **Location** (`direccion`): Specify where activity occurs
+   - **Date** (`fecha`): Select activity date
+   - **Time** (`hora`): Set activity time
+
+3. **Save Activity**
+   - Submit the form
+   - Activity is created and immediately appears on calendar
+   - Activity becomes searchable
+
+### Creating Case Activities
+
+1. **Navigate to Case Activities Module**
+   - Access via route: `/agenda/actividadCaso`
+   - Click "Create New Activity"
+
+2. **Select Associated Case**
+   - Choose the case from dropdown list
+   - Only cases you have access to are shown
+
+3. **Enter Activity Details**
+   - **Title**: E.g., "Court Hearing - Case 2024-001"
+   - **Description**: Add details about the hearing or meeting
+   - **Location**: Court address or meeting location
+   - **Date**: Hearing or meeting date
+   - **Time**: Scheduled time
+
+4. **Save Activity**
+   - Activity is linked to selected case
+   - Appears on calendar with case number in title
+   - Format: "{titulo} del expediente {n_caso}"
+
+### Creating Expediente Activities
+
+1. **Navigate to Expediente Activities**
+   - Access via route: `/agenda/actividadConciliacion`
+   - Click "Create New Activity"
+
+2. **Select Associated Expediente**
+   - Choose expediente from dropdown
+   - Only expedientes you can access are shown
+
+3. **Enter Activity Details**
+   - **Title**: E.g., "Conciliation Session 1"
+   - **Description**: Session agenda or notes
+   - **Location**: Conciliation center address
+   - **Date**: Session date
+   - **Time**: Session time
+
+4. **Save Activity**
+   - Activity is linked to selected expediente
+   - Appears on calendar with expediente number
+   - Format: "{titulo} del expediente {n_expediente}"
+
+<Note>
+When creating case or expediente activities, the system automatically appends the case/expediente number to the title in the calendar view, making it easy to identify which matter the activity relates to.
+</Note>
+
+## Calendar View
+
+The unified calendar provides comprehensive activity visualization:
+
+### Accessing the Calendar
+
+- Route: `/agenda/calendar`
+- Available to all authenticated users
+- Displays all three activity types in one view
+
+### Calendar Interface Features
+
+Powered by FullCalendar.js, the calendar offers:
+
+- **Month View**: See entire month at a glance
+- **Week View**: Detailed weekly schedule
+- **Day View**: Hourly breakdown of single day
+- **Event Display**: Color-coded events with titles
+- **Event Details**: Click events to view full information
+- **Navigation**: Previous/next buttons and date picker
+- **Today Button**: Quick return to current date
+
+### Event Color Coding
+
+| Activity Type | Color | RGB Value |
+|---------------|-------|----------|
+| General Activities | Red | `rgb(239, 68, 68)` |
+| Case Activities | Green | `rgb(34, 197, 94)` |
+| Expediente Activities | Blue | `rgb(59, 130, 246)` |
+
+### Calendar Event Format
+
+**General Activities Display:**
+```
+Title: {titulo}
+Start: {fecha} {hora}
+End: {fecha} {hora}
+Color: Red
+```
+
+**Case Activities Display:**
+```
+Title: {titulo} del expediente {n_caso}
+Start: {fecha} {hora}
+End: {fecha} {hora}
+Color: Green
+```
+
+**Expediente Activities Display:**
+```
+Title: {titulo} del expediente {n_expediente}
+Start: {fecha} {hora}
+End: {fecha} {hora}
+Color: Blue
+```
+
+<Tip>
+The calendar treats activities as point-in-time events (start and end times are identical). This is ideal for meetings and hearings with specific scheduled times.
+</Tip>
+
+## Viewing Activity Details
+
+Access comprehensive information for each activity:
+
+### General Activity Details
+
+1. Navigate to `/agenda/actividad`
+2. View list of all general activities
+3. Click on any activity to see full details
+4. Information displayed:
+   - Title and description
+   - Date and time
+   - Location
+
+### Case Activity Details
+
+1. Navigate to `/agenda/actividadCaso`
+2. View list of case activities
+3. Each activity shows:
+   - Activity details
+   - Associated case information
+   - Link to case detail page
+
+### Expediente Activity Details
+
+1. Navigate to `/agenda/actividadConciliacion`
+2. View list of expediente activities
+3. Each activity shows:
+   - Activity details
+   - Associated expediente information
+   - Link to expediente detail page
+
+## Editing Activities
+
+Update activity information as schedules change:
+
+### General Activities
+
+1. **Access Edit Form**
+   - From activities list, click "Edit"
+   - Route: `GET /agenda/actividad/{actividad}/edit`
+
+2. **Update Fields**
+   - Modify any field: title, description, location, date, time
+   - All fields maintain same validation rules
+
+3. **Save Changes**
+   - Route: `PUT /agenda/actividad/{actividad}`
+   - Calendar automatically updates with new information
+   - Search index is updated
+
+### Case Activities
+
+1. **Access Edit Form**
+   - Route: `GET /agenda/actividadCaso/{cas_actividad}/edit`
+
+2. **Update Information**
+   - Modify activity details
+   - Case association typically remains unchanged
+
+3. **Save Changes**
+   - Route: `PUT /agenda/actividadCaso/{cas_actividad}`
+   - Calendar reflects updates immediately
+
+### Expediente Activities
+
+1. **Access Edit Form**
+   - Route: `GET /agenda/actividadConciliacion/{con_actividad}/edit`
+
+2. **Update Details**
+   - Modify any field as needed
+   - Expediente association typically unchanged
+
+3. **Save Changes**
+   - Route: `PUT /agenda/actividadConciliacion/{con_actividad}`
+   - Updates appear in calendar
+
+<Warning>
+When rescheduling activities, ensure you notify all participants of the change. The system does not automatically send notifications when activity dates or times are modified.
+</Warning>
+
+## Deleting Activities
+
+Remove activities that are cancelled or no longer needed:
+
+### Deletion Process
+
+**General Activities:**
+- Route: `DELETE /agenda/actividad/{actividad}`
+- Click "Delete" from activity list
+- Confirmation prompt appears
+- Activity is permanently removed
+- Removed from calendar immediately
+
+**Case Activities:**
+- Route: `DELETE /agenda/actividadCaso/{cas_actividad}`
+- Delete from case activities list
+- Permanent deletion
+- Calendar updates automatically
+
+**Expediente Activities:**
+- Route: `DELETE /agenda/actividadConciliacion/{con_actividad}`
+- Delete from expediente activities list
+- Permanent removal
+- Calendar reflects change
+
+<Warning>
+Activity deletion is permanent and cannot be undone. Consider editing the activity to mark it as "Cancelled" in the title or description instead of deleting, to maintain historical records.
+</Warning>
+
+## Searching Activities
+
+All activity types use Laravel Scout for powerful search:
+
+### Search Fields
+
+**General Activities** search across:
+- Title (`titulo`)
+- Description (`descripcion`)
+- Date (`fecha`)
+
+**Case Activities** search across:
+- Title (`titulo`)
+- Description (`descripcion`)
+- Date (`fecha`)
+
+**Expediente Activities** search across:
+- Title (`titulo`)
+- Description (`descripcion`)
+- Date (`fecha`)
+
+### Search Interface
+
+1. Enter search terms in activity list search box
+2. Results display matching activities
+3. Search is case-insensitive with partial matching
+4. Date searches support multiple formats
+
+<Tip>
+Search by date to find all activities on a specific day. Search by keywords to find activities by topic or participant names mentioned in descriptions.
+</Tip>
+
+## Role-Based Access Control
+
+### General Activities
+
+| Role | Access Level |
+|------|-------------|
+| **All Authenticated Users** | Full access - create, view, edit, delete |
+
+Access: Encargado, Admin, Asistente, Abogado
+
+### Case Activities
+
+| Role | Access Level |
+|------|-------------|
+| **Encargado** | Full access - create, view, edit, delete |
+| **Admin** | Full access - create, view, edit, delete |
+| **Abogado** | Full access - create, view, edit, delete |
+| **Asistente** | No access |
+
+### Expediente Activities
+
+| Role | Access Level |
+|------|-------------|
+| **Encargado** | Full access - create, view, edit, delete |
+| **Admin** | Full access - create, view, edit, delete |
+| **Asistente** | Full access - create, view, edit, delete |
+| **Abogado** | No access |
+
+<Note>
+The role restrictions for activities match those of their parent modules. If you can manage cases, you can manage case activities. If you can manage expedientes, you can manage expediente activities.
+</Note>
+
+## Integration with Other Modules
+
+### Case Integration
+
+- Case activities are linked via `id_caso` foreign key
+- Relationship defined in ActividadCaso model as `BelongsTo`
+- View case activities from case detail page
+- Calendar shows activity with case number
+
+### Expediente Integration
+
+- Expediente activities linked via `id_expediente` foreign key
+- Relationship defined in ActividadConciliacion model as `BelongsTo`
+- Expediente model has `HasMany` relationship to activities
+- View expediente activities from expediente detail page
+- Calendar shows activity with expediente number
+
+### Calendar Integration
+
+- CalendarController aggregates all three activity types
+- Combines activities into single events array
+- Passes to FullCalendar.js for rendering
+- Color coding distinguishes activity types
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Descriptive Titles">
+    Create clear, specific titles that identify the activity at a glance:
+    - Good: "Client Meeting - Discovery Phase - Johnson Case"
+    - Poor: "Meeting"
+    
+    Detailed titles help when scanning the calendar or searching for activities.
+  </Accordion>
+
+  <Accordion title="Always Add Location Information">
+    Fill in the `direccion` field for every activity:
+    - Court addresses for hearings
+    - Client offices for meetings
+    - Conference room names for internal meetings
+    - Virtual meeting links for online sessions
+    
+    This ensures team members know where to go.
+  </Accordion>
+
+  <Accordion title="Detailed Descriptions">
+    Use the description field to add:
+    - Purpose of the activity
+    - Participants expected to attend
+    - Preparation required
+    - Documents to bring
+    - Special instructions
+    
+    This information helps team members prepare appropriately.
+  </Accordion>
+
+  <Accordion title="Create Activities Early">
+    Schedule activities as soon as dates are confirmed:
+    - Don't wait until the last minute
+    - Early scheduling prevents conflicts
+    - Team members can plan around scheduled activities
+    - Reduces missed deadlines and hearings
+  </Accordion>
+
+  <Accordion title="Regular Calendar Review">
+    Make calendar review a daily habit:
+    - Check upcoming activities each morning
+    - Review weekly schedule at start of week
+    - Look ahead for major deadlines
+    - Update activities as information changes
+  </Accordion>
+
+  <Accordion title="Coordinate Case and Expediente Activities">
+    Be aware of scheduling conflicts:
+    - Check calendar before scheduling new activities
+    - Consider team member availability
+    - Avoid overlapping case and expediente activities
+    - Leave time for travel between locations
+  </Accordion>
+</AccordionGroup>
+
+## Common Workflows
+
+### Scheduling a Court Hearing
+
+1. Create Case Activity
+2. Title: "Court Hearing - Motion to Dismiss - Case 2024-045"
+3. Description: "Hearing on defendant's motion to dismiss. Judge Martinez presiding. Bring evidence binder and witness list."
+4. Location: "Superior Court, Courtroom 3, 100 Main Street"
+5. Date: Hearing date
+6. Time: Hearing time (arrive 30 minutes early)
+7. Save and verify appears on calendar in green
+
+### Scheduling a Conciliation Session
+
+1. Create Expediente Activity
+2. Title: "Conciliation Session 1 - Initial Proposals"
+3. Description: "First session. Both parties present initial positions. Conciliator will outline process."
+4. Location: "Conciliation Center, Room B, 50 Peace Avenue"
+5. Date: Session date
+6. Time: Session start time
+7. Save and verify appears on calendar in blue
+
+### Scheduling Team Meeting
+
+1. Create General Activity
+2. Title: "Weekly Team Meeting - Case Review"
+3. Description: "Review all active cases, discuss strategy, assign tasks for upcoming week."
+4. Location: "Conference Room A"
+5. Date: Meeting date
+6. Time: Meeting time
+7. Save and verify appears on calendar in red
+
+## Technical Implementation
+
+For developers and system administrators:
+
+### Models
+- `app/Models/Actividad.php` - General activities
+- `app/Models/ActividadCaso.php` - Case activities
+- `app/Models/ActividadConciliacion.php` - Expediente activities
+
+### Controllers
+- `app/Http/Controllers/ActividadController.php`
+- `app/Http/Controllers/ActividadCasoController.php`
+- `app/Http/Controllers/ActividadConciliacionController.php`
+- `app/Http/Controllers/CalendarController.php`
+
+### Routes - General Activities
+- List: `GET /agenda/actividad`
+- Create: `POST /agenda/actividad`
+- Edit form: `GET /agenda/actividad/{actividad}/edit`
+- Update: `PUT /agenda/actividad/{actividad}`
+- Delete: `DELETE /agenda/actividad/{actividad}`
+
+### Routes - Case Activities
+- List: `GET /agenda/actividadCaso`
+- Create: `POST /agenda/actividadCaso`
+- Edit form: `GET /agenda/actividadCaso/{cas_actividad}/edit`
+- Update: `PUT /agenda/actividadCaso/{cas_actividad}`
+- Delete: `DELETE /agenda/actividadCaso/{cas_actividad}`
+
+### Routes - Expediente Activities
+- List: `GET /agenda/actividadConciliacion`
+- Create: `POST /agenda/actividadConciliacion`
+- Edit form: `GET /agenda/actividadConciliacion/{con_actividad}/edit`
+- Update: `PUT /agenda/actividadConciliacion/{con_actividad}`
+- Delete: `DELETE /agenda/actividadConciliacion/{con_actividad}`
+
+### Calendar Route
+- Calendar view: `GET /agenda/calendar`
+
+### Database Tables
+- `actividads` - General activities
+- `actividad_casos` - Case activities
+- `actividad_conciliacions` - Expediente activities
+
+### FullCalendar.js Integration
+
+The calendar view uses FullCalendar.js:
+- Events array built in CalendarController
+- Each event includes: title, start, end, color, textColor
+- Passed to view as `['events' => $events]`
+- Rendered by FullCalendar.js in the browser
+
+### Relationships
+
+**ActividadCaso:**
+- `BelongsTo` relationship with Casos via `id_caso`
+
+**ActividadConciliacion:**
+- `BelongsTo` relationship with Expedientes via `id_expediente`
+
+**Expedientes:**
+- `HasMany` relationship with ActividadConciliacion as `conActividades`
+
+### Search Implementation
+
+All three models use Laravel Scout:
+- `use Searchable;` trait included
+- `toSearchableArray()` method defines searchable fields
+- Indexed fields: titulo, descripcion, fecha
+- Search route parameter: `request('search')`

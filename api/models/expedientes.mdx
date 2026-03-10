@@ -1,0 +1,333 @@
+---
+title: 'Expedientes Model'
+description: 'Gestión de expedientes de conciliación'
+---
+
+## Overview
+
+El modelo `Expedientes` representa los expedientes de conciliación extrajudicial gestionados por el centro de conciliación. Cada expediente está asociado a un cliente y puede tener múltiples submaterias y actividades de conciliación.
+
+**Namespace:** `App\Models\Expedientes`
+
+**Table:** `expedientes`
+
+**Traits:**
+- `HasFactory` - Soporte para factories de Laravel
+- `Searchable` - Integración con Laravel Scout para búsqueda
+
+## Fillable Attributes
+
+<ParamField path="n_expediente" type="string" required>
+  Número único del expediente de conciliación
+</ParamField>
+
+<ParamField path="fecha_inicio" type="date" required>
+  Fecha de inicio del expediente
+</ParamField>
+
+<ParamField path="fecha_final" type="date">
+  Fecha de finalización o cierre del expediente
+</ParamField>
+
+<ParamField path="descripcion" type="text">
+  Descripción detallada del expediente de conciliación
+</ParamField>
+
+<ParamField path="estado" type="string" required>
+  Estado actual del expediente (abierto, en proceso, cerrado, acuerdo total, falta de acuerdo, etc.)
+</ParamField>
+
+<ParamField path="id_cliente" type="integer" required>
+  ID del cliente solicitante (foreign key)
+</ParamField>
+
+## Relationships
+
+### cliente()
+
+Relación muchos a uno con el cliente solicitante del expediente.
+
+**Type:** `BelongsTo`
+
+**Returns:** `Illuminate\Database\Eloquent\Relations\BelongsTo`
+
+```php
+public function cliente(): BelongsTo
+{
+    return $this->belongsTo(Cliente::class, 'id_cliente', 'id');
+}
+```
+
+### submaterias()
+
+Relación muchos a muchos con las submaterias conciliables asociadas al expediente.
+
+**Type:** `BelongsToMany`
+
+**Returns:** `Illuminate\Database\Eloquent\Relations\BelongsToMany`
+
+**Pivot Table:** `expediente_has_submaterias`
+
+```php
+public function submaterias(): BelongsToMany
+{
+    return $this->belongsToMany(
+        Submaterias::class,
+        'expediente_has_submaterias',
+        'id_expediente',
+        'id_submateria'
+    );
+}
+```
+
+### conActividades()
+
+Relación uno a muchos con las actividades de conciliación programadas para el expediente.
+
+**Type:** `HasMany`
+
+**Returns:** `Illuminate\Database\Eloquent\Relations\HasMany`
+
+```php
+public function conActividades(): HasMany
+{
+    return $this->hasMany(ActividadConciliacion::class, 'id_expediente', 'id');
+}
+```
+
+## Related Models
+
+El modelo Expedientes se relaciona con otros modelos del sistema:
+
+- **Expediente_has_submateria** - Tabla pivot para submaterias asociadas
+- **expediente_has_invitado** - Tabla pivot para partes invitadas al expediente
+- **Expediente_has_conciliador** - Tabla pivot para conciliadores asignados
+- **ActividadConciliacion** - Actividades y audiencias programadas
+
+## Laravel Scout Configuration
+
+El modelo Expedientes está configurado para búsqueda con Laravel Scout. Los siguientes campos son indexados:
+
+```php
+public function toSearchableArray()
+{
+    return [
+        'n_expediente' => $this->n_expediente,
+        'estado' => $this->estado,
+    ];
+}
+```
+
+## Usage Examples
+
+<CodeGroup>
+
+```php Creating an Expediente
+use App\Models\Expedientes;
+
+$expediente = Expedientes::create([
+    'n_expediente' => 'EXP-2024-001',
+    'fecha_inicio' => '2024-01-15',
+    'descripcion' => 'Expediente de conciliación extrajudicial en materia familiar',
+    'estado' => 'abierto',
+    'id_cliente' => 1
+]);
+```
+
+```php Searching Expedientes
+use App\Models\Expedientes;
+
+// Búsqueda por número de expediente
+$expediente = Expedientes::search('EXP-2024-001')->first();
+
+// Búsqueda por estado
+$expedientesAbiertos = Expedientes::search('abierto')->get();
+
+// Búsqueda usando Eloquent
+$expedientes = Expedientes::where('estado', 'en proceso')
+    ->orderBy('fecha_inicio', 'desc')
+    ->get();
+```
+
+```php Working with Submaterias
+use App\Models\Expedientes;
+
+$expediente = Expedientes::find(1);
+
+// Obtener todas las submaterias del expediente
+$submaterias = $expediente->submaterias;
+
+// Asociar submaterias al expediente
+$expediente->submaterias()->attach([1, 2, 3]);
+
+// Sincronizar submaterias (reemplaza existentes)
+$expediente->submaterias()->sync([1, 3, 5]);
+
+// Desasociar una submateria
+$expediente->submaterias()->detach(2);
+```
+
+```php Managing Actividades
+use App\Models\Expedientes;
+
+$expediente = Expedientes::find(1);
+
+// Obtener todas las actividades del expediente
+$actividades = $expediente->conActividades;
+
+// Crear nueva actividad para el expediente
+$expediente->conActividades()->create([
+    'titulo' => 'Audiencia de Conciliación',
+    'descripcion' => 'Primera audiencia de conciliación',
+    'fecha' => '2024-02-15',
+    'hora' => '10:00:00',
+    'direccion' => 'Centro de Conciliación - Sala 1'
+]);
+
+// Contar actividades pendientes
+$actividadesPendientes = $expediente->conActividades()
+    ->where('fecha', '>=', now())
+    ->count();
+```
+
+```php Eager Loading Relationships
+use App\Models\Expedientes;
+
+// Cargar expediente con todas sus relaciones
+$expediente = Expedientes::with([
+    'cliente',
+    'submaterias',
+    'conActividades'
+])->find(1);
+
+// Cargar expedientes con conteo de actividades
+$expedientes = Expedientes::withCount('conActividades')
+    ->where('estado', 'abierto')
+    ->get();
+```
+
+```php Updating Expediente Status
+use App\Models\Expedientes;
+
+$expediente = Expedientes::find(1);
+
+// Cerrar expediente con acuerdo total
+$expediente->update([
+    'estado' => 'acuerdo total',
+    'fecha_final' => now()
+]);
+
+// Actualizar estado a falta de acuerdo
+$expediente->update([
+    'estado' => 'falta de acuerdo',
+    'fecha_final' => now(),
+    'descripcion' => $expediente->descripcion . '\n\nNo se llegó a un acuerdo entre las partes.'
+]);
+```
+
+```php Complex Queries
+use App\Models\Expedientes;
+
+// Expedientes activos con sus próximas actividades
+$expedientes = Expedientes::with(['conActividades' => function($query) {
+        $query->where('fecha', '>=', now())
+              ->orderBy('fecha', 'asc');
+    }])
+    ->whereIn('estado', ['abierto', 'en proceso'])
+    ->get();
+
+// Expedientes por cliente con submaterias
+$expedientesCliente = Expedientes::with(['submaterias', 'cliente'])
+    ->where('id_cliente', 1)
+    ->orderBy('fecha_inicio', 'desc')
+    ->get();
+```
+
+</CodeGroup>
+
+## Database Schema
+
+```sql
+CREATE TABLE expedientes (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    n_expediente VARCHAR(255) NOT NULL UNIQUE,
+    fecha_inicio DATE NOT NULL,
+    fecha_final DATE NULL,
+    descripcion TEXT,
+    estado VARCHAR(255) NOT NULL,
+    id_cliente BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    FOREIGN KEY (id_cliente) REFERENCES clientes(id) ON DELETE CASCADE,
+    INDEX idx_n_expediente (n_expediente),
+    INDEX idx_estado (estado),
+    INDEX idx_id_cliente (id_cliente)
+);
+
+CREATE TABLE expediente_has_submaterias (
+    id_expediente BIGINT UNSIGNED NOT NULL,
+    id_submateria BIGINT UNSIGNED NOT NULL,
+    
+    PRIMARY KEY (id_expediente, id_submateria),
+    FOREIGN KEY (id_expediente) REFERENCES expedientes(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_submateria) REFERENCES submaterias(id) ON DELETE CASCADE
+);
+```
+
+## Complete Model Code
+
+```php /home/daytona/workspace/source/app/Models/Expedientes.php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Laravel\Scout\Searchable;
+
+class Expedientes extends Model
+{
+    use HasFactory, Searchable;
+    
+    protected $fillable = [
+        'n_expediente',
+        'fecha_inicio',
+        'fecha_final',
+        'descripcion',
+        'estado',
+        'id_cliente',
+    ];
+
+    public function cliente(): BelongsTo
+    {
+        return $this->belongsTo(Cliente::class, 'id_cliente', 'id');
+    }
+
+    public function submaterias(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Submaterias::class,
+            'expediente_has_submaterias',
+            'id_expediente',
+            'id_submateria'
+        );
+    }
+
+    public function conActividades(): HasMany
+    {
+        return $this->hasMany(ActividadConciliacion::class, 'id_expediente', 'id');
+    }
+
+    public function toSearchableArray()
+    {
+        return [
+            'n_expediente' => $this->n_expediente,
+            'estado' => $this->estado,
+        ];
+    }
+}
+```

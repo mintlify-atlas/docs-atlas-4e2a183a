@@ -1,0 +1,553 @@
+---
+title: 'CasosController'
+description: 'Controller for managing legal cases (casos) including CRUD operations and relationship management'
+---
+
+## Overview
+
+The `CasosController` manages legal cases in the Sistema de Abogados application. It handles case creation, updates, deletion, search functionality, and relationship management with processes and opposing parties.
+
+**Namespace:** `App\Http\Controllers`
+
+**Extends:** `Controller`
+
+## Dependencies
+
+The controller uses the following models:
+- `Casos` - Main case model
+- `Cliente` - Client model
+- `TipoProceso` - Process type model
+- `ParteContraria` - Opposing party model
+- `Caso_has_proceso` - Case-Process pivot model
+- `Caso_has_PContraria` - Case-Opposing party pivot model
+- `CasoDocumento` - Case document model
+
+## Methods
+
+### index()
+
+Lists all cases with pagination and search functionality.
+
+**Purpose:** Display a paginated list of cases with optional search filtering
+
+**Parameters:** None (uses `request('search')` for search query)
+
+**Returns:** View `caso.caso.index` with cases and clients
+
+**Response Data:**
+<ResponseField name="casos" type="Collection">
+  Paginated collection of cases (5 per page)
+</ResponseField>
+<ResponseField name="clientes" type="Collection">
+  All clients for filtering/assignment
+</ResponseField>
+
+**Code Example:**
+```php
+public function index()
+{
+    $casos = Casos::search(request('search'))->paginate(5);
+    $clientes = Cliente::all();
+    return view('caso.caso.index', compact('casos','clientes'));
+}
+```
+
+**Route:** `caso.caso.index`
+
+---
+
+### create()
+
+Displays the case creation form.
+
+**Purpose:** Show the form for creating a new case
+
+**Parameters:** None
+
+**Returns:** View `caso.caso.create` with clients
+
+**Response Data:**
+<ResponseField name="clientes" type="Collection">
+  All available clients to assign to the case
+</ResponseField>
+
+**Code Example:**
+```php
+public function create()
+{
+    $clientes = Cliente::all();
+    return view('caso.caso.create', compact('clientes'));
+}
+```
+
+**Route:** `caso.caso.create`
+
+---
+
+### store()
+
+Creates a new case with validation.
+
+**Purpose:** Store a new case in the database
+
+**Request Parameters:**
+<ParamField path="n_caso" type="string" required>
+  Case number or identifier
+</ParamField>
+<ParamField path="fecha_inicio" type="date" required>
+  Case start date
+</ParamField>
+<ParamField path="fecha_final" type="date">
+  Case end date (optional)
+</ParamField>
+<ParamField path="descripcion" type="text">
+  Case description (optional)
+</ParamField>
+<ParamField path="estado" type="string" required>
+  Case status
+</ParamField>
+<ParamField path="id_cliente" type="integer" required>
+  Client ID associated with the case
+</ParamField>
+
+**Validation Rules:**
+```php
+[
+    'n_caso' => 'required', 
+    'fecha_inicio' => 'required',
+    'fecha_final' => 'nullable',
+    'descripcion' => 'nullable',
+    'estado' => 'required',
+    'id_cliente' => 'required'
+]
+```
+
+**Returns:** Redirect to `caso.caso.index` with success message
+
+**Success Message:** "Caso registrado correctamente."
+
+**Code Example:**
+```php
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'n_caso' => 'required', 
+        'fecha_inicio' => 'required',
+        'fecha_final' => 'nullable',
+        'descripcion' => 'nullable',
+        'estado' => 'required',
+        'id_cliente' => 'required'
+    ]);
+    Casos::create($validated);
+    return to_route('caso.caso.index')
+        ->with('message', 'Caso registrado correctamente.');
+}
+```
+
+**Route:** `caso.caso.store`
+
+---
+
+### show()
+
+Displays detailed information for a specific case.
+
+**Purpose:** Show complete case details including processes, opposing parties, and documents
+
+**Parameters:**
+<ParamField path="caso" type="Casos" required>
+  Case model instance (route model binding)
+</ParamField>
+
+**Returns:** View `caso.caso.caso` with case data and related entities
+
+**Response Data:**
+<ResponseField name="caso" type="Casos">
+  The case instance
+</ResponseField>
+<ResponseField name="procesos" type="Collection">
+  All available process types
+</ResponseField>
+<ResponseField name="cas_procesos" type="Collection">
+  Process types assigned to cases
+</ResponseField>
+<ResponseField name="p_contrarias" type="Collection">
+  All opposing parties
+</ResponseField>
+<ResponseField name="cas_contrarias" type="Collection">
+  Opposing parties assigned to cases
+</ResponseField>
+<ResponseField name="cas_documentos" type="Collection">
+  Documents associated with cases
+</ResponseField>
+
+**Code Example:**
+```php
+public function show(Casos $caso)
+{
+    $procesos = TipoProceso::all();
+    $cas_procesos = Caso_has_proceso::all();
+    $p_contrarias = ParteContraria::all();
+    $cas_contrarias = Caso_has_PContraria::all();
+    $cas_documentos = CasoDocumento::all();
+    return view('caso.caso.caso', 
+        compact('caso','procesos','cas_procesos',
+                'p_contrarias','cas_contrarias','cas_documentos'));
+}
+```
+
+**Route:** `caso.caso.show`
+
+---
+
+### edit()
+
+Displays the case edit form.
+
+**Purpose:** Show the form for editing an existing case
+
+**Parameters:**
+<ParamField path="caso" type="Casos" required>
+  Case model instance (route model binding)
+</ParamField>
+
+**Returns:** View `caso.caso.edit` with case and clients
+
+**Response Data:**
+<ResponseField name="caso" type="Casos">
+  The case instance to edit
+</ResponseField>
+<ResponseField name="clientes" type="Collection">
+  All available clients
+</ResponseField>
+
+**Code Example:**
+```php
+public function edit(Casos $caso)
+{
+    $clientes = Cliente::all();
+    return view('caso.caso.edit', compact('caso','clientes'));
+}
+```
+
+**Route:** `caso.caso.edit`
+
+---
+
+### update()
+
+Updates an existing case with validation.
+
+**Purpose:** Update case information in the database
+
+**Parameters:**
+<ParamField path="caso" type="Casos" required>
+  Case model instance (route model binding)
+</ParamField>
+
+**Request Parameters:**
+<ParamField path="n_caso" type="string" required>
+  Case number or identifier
+</ParamField>
+<ParamField path="fecha_inicio" type="date" required>
+  Case start date
+</ParamField>
+<ParamField path="fecha_final" type="date">
+  Case end date (optional)
+</ParamField>
+<ParamField path="descripcion" type="text">
+  Case description (optional)
+</ParamField>
+<ParamField path="estado" type="string" required>
+  Case status
+</ParamField>
+<ParamField path="id_cliente" type="integer">
+  Client ID (optional on update)
+</ParamField>
+
+**Validation Rules:**
+```php
+[
+    'n_caso' => 'required', 
+    'fecha_inicio' => 'required',
+    'fecha_final' => 'nullable',
+    'descripcion' => 'nullable',
+    'estado' => 'required',
+    'id_cliente' => 'nullable'
+]
+```
+
+**Returns:** Redirect to `caso.caso.index` with success message
+
+**Success Message:** "Caso Actualisado correctamente."
+
+**Code Example:**
+```php
+public function update(Request $request, Casos $caso)
+{
+    $validated = $request->validate([
+        'n_caso' => 'required', 
+        'fecha_inicio' => 'required',
+        'fecha_final' => 'nullable',
+        'descripcion' => 'nullable',
+        'estado' => 'required',
+        'id_cliente' => 'nullable'
+    ]);
+    $caso->update($validated);
+    return to_route('caso.caso.index')
+        ->with('message', 'Caso Actualisado correctamente.');
+}
+```
+
+**Route:** `caso.caso.update`
+
+---
+
+### destroy()
+
+Deletes a case from the database.
+
+**Purpose:** Remove a case with foreign key constraint handling
+
+**Parameters:**
+<ParamField path="caso" type="Casos" required>
+  Case model instance (route model binding)
+</ParamField>
+
+**Returns:** 
+- Success: Redirect to `caso.caso.index` with success message
+- Error: Back with alert message if constraints exist
+
+**Success Message:** "Caso eliminado correctamente."
+
+**Error Message:** "No puede eliminar! Antes elimine sus conexiones."
+
+**Code Example:**
+```php
+public function destroy(Casos $caso)
+{
+    try{
+        $caso->delete();
+        return to_route('caso.caso.index')
+            ->with('messagedestroy', 'Caso eliminado correctamente.');
+    }catch(\Exception $e){
+        return back()->with('messageAlert', 
+            'No puede eliminar! Antes elimine sus conexiones.');
+    }
+}
+```
+
+**Route:** `caso.caso.destroy`
+
+**Notes:** 
+- Uses try-catch to handle foreign key constraint violations
+- Related entities must be removed before deleting the case
+
+---
+
+### assignProceso()
+
+Assigns a process type to a case.
+
+**Purpose:** Create a relationship between a case and a process type
+
+**Parameters:**
+<ParamField path="caso" type="Casos" required>
+  Case model instance (route model binding)
+</ParamField>
+
+**Request Parameters:**
+<ParamField path="id_tipo_proceso" type="integer" required>
+  Process type ID to assign
+</ParamField>
+
+**Returns:** Back to previous page with success message
+
+**Success Message:** "Proceso asignado."
+
+**Code Example:**
+```php
+public function assignProceso(Request $request, Casos $caso)
+{
+    $validated = $request->input();
+    $validated['id_caso'] = $caso->id;
+    Caso_has_proceso::create($validated);
+    return back()->with('message', 'Proceso asignado.');
+}
+```
+
+**Route:** Custom route for assigning process
+
+**Notes:**
+- Automatically sets `id_caso` from the route parameter
+- Creates a pivot table entry
+
+---
+
+### removeProceso()
+
+Removes a process type assignment from a case.
+
+**Purpose:** Delete the relationship between a case and a process type
+
+**Parameters:**
+<ParamField path="cas_proceso" type="Caso_has_proceso" required>
+  Case-process pivot model instance (route model binding)
+</ParamField>
+
+**Returns:** Back to previous page with success message
+
+**Success Message:** "Proceso Removido."
+
+**Code Example:**
+```php
+public function removeProceso(Caso_has_proceso $cas_proceso)
+{
+    $cas_proceso->delete();
+    return back()->with('messagedestroy', 'Proceso Removido.');
+}
+```
+
+**Route:** Custom route for removing process
+
+---
+
+### assignPContraria()
+
+Assigns an opposing party to a case.
+
+**Purpose:** Create a relationship between a case and an opposing party
+
+**Parameters:**
+<ParamField path="caso" type="Casos" required>
+  Case model instance (route model binding)
+</ParamField>
+
+**Request Parameters:**
+<ParamField path="id_p_contraria" type="integer" required>
+  Opposing party ID to assign
+</ParamField>
+
+**Returns:** Back to previous page with success message
+
+**Success Message:** "Parte contraria asignada."
+
+**Code Example:**
+```php
+public function assignPContraria(Request $request, Casos $caso)
+{
+    $validated = $request->input();
+    $validated['id_caso'] = $caso->id;
+    Caso_has_PContraria::create($validated);
+    return back()->with('message', 'Parte contraria asignada.');
+}
+```
+
+**Route:** Custom route for assigning opposing party
+
+**Notes:**
+- Automatically sets `id_caso` from the route parameter
+- Creates a pivot table entry
+
+---
+
+### removePContraria()
+
+Removes an opposing party assignment from a case.
+
+**Purpose:** Delete the relationship between a case and an opposing party
+
+**Parameters:**
+<ParamField path="cas_contraria" type="Caso_has_PContraria" required>
+  Case-opposing party pivot model instance (route model binding)
+</ParamField>
+
+**Returns:** Back to previous page with success message
+
+**Success Message:** "Parte contraria Removido."
+
+**Code Example:**
+```php
+public function removePContraria(Caso_has_PContraria $cas_contraria)
+{
+    $cas_contraria->delete();
+    return back()->with('messagedestroy', 'Parte contraria Removido.');
+}
+```
+
+**Route:** Custom route for removing opposing party
+
+---
+
+## Usage Examples
+
+### Creating a New Case
+
+```php
+// POST /casos
+$data = [
+    'n_caso' => 'CASO-2026-001',
+    'fecha_inicio' => '2026-03-10',
+    'fecha_final' => null,
+    'descripcion' => 'Demanda por incumplimiento de contrato',
+    'estado' => 'Activo',
+    'id_cliente' => 5
+];
+```
+
+### Updating a Case
+
+```php
+// PUT /casos/{caso}
+$data = [
+    'n_caso' => 'CASO-2026-001',
+    'fecha_inicio' => '2026-03-10',
+    'fecha_final' => '2026-12-31',
+    'descripcion' => 'Demanda por incumplimiento de contrato - En proceso',
+    'estado' => 'En Proceso',
+    'id_cliente' => 5
+];
+```
+
+### Assigning a Process Type
+
+```php
+// POST /casos/{caso}/assign-proceso
+$data = [
+    'id_tipo_proceso' => 3
+];
+```
+
+### Searching Cases
+
+```php
+// GET /casos?search=CASO-2026
+// The search parameter is automatically handled by the Casos model
+```
+
+## Error Handling
+
+### Deletion Constraints
+
+When attempting to delete a case with related records:
+
+```php
+// If foreign key constraints exist
+return back()->with('messageAlert', 
+    'No puede eliminar! Antes elimine sus conexiones.');
+```
+
+### Validation Errors
+
+Laravel's validation will automatically return error messages for:
+- Missing required fields
+- Invalid data formats
+- Type mismatches
+
+## Related Models
+
+- **Casos** - Main case model at `/home/daytona/workspace/source/app/Models/Casos.php`
+- **Cliente** - Client model
+- **TipoProceso** - Process types for case categorization
+- **ParteContraria** - Opposing parties in cases
+- **CasoDocumento** - Documents attached to cases

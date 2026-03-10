@@ -1,0 +1,540 @@
+---
+title: 'Actividad Models'
+description: 'Gestión de actividades, audiencias y eventos del calendario'
+---
+
+## Overview
+
+El sistema cuenta con tres modelos relacionados para la gestión de actividades:
+
+- **Actividad** - Modelo base para actividades generales
+- **ActividadCaso** - Actividades específicas para casos legales
+- **ActividadConciliacion** - Actividades para expedientes de conciliación
+
+Todos los modelos utilizan Laravel Scout para búsqueda avanzada y están diseñados para integración con sistemas de calendario.
+
+---
+
+## Actividad (Base Model)
+
+Modelo base para actividades y eventos generales del sistema.
+
+**Namespace:** `App\Models\Actividad`
+
+**Table:** `actividads`
+
+**Traits:**
+- `HasFactory` - Soporte para factories de Laravel
+- `Searchable` - Integración con Laravel Scout
+
+### Fillable Attributes
+
+<ParamField path="titulo" type="string" required>
+  Título de la actividad o evento
+</ParamField>
+
+<ParamField path="descripcion" type="text">
+  Descripción detallada de la actividad
+</ParamField>
+
+<ParamField path="direccion" type="string">
+  Dirección o ubicación donde se realizará la actividad
+</ParamField>
+
+<ParamField path="fecha" type="date" required>
+  Fecha programada para la actividad
+</ParamField>
+
+<ParamField path="hora" type="time" required>
+  Hora programada para la actividad
+</ParamField>
+
+### Scout Configuration
+
+```php
+public function toSearchableArray()
+{
+    return [
+        'titulo' => $this->titulo,
+        'descripcion' => $this->descripcion,
+        'fecha' => $this->fecha,
+    ];
+}
+```
+
+### Complete Model Code
+
+```php /home/daytona/workspace/source/app/Models/Actividad.php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Laravel\Scout\Searchable;
+
+class Actividad extends Model
+{
+    use HasFactory, Searchable;
+    
+    protected $fillable = [
+        'titulo',
+        'descripcion',
+        'direccion',
+        'fecha',
+        'hora',
+    ];
+
+    public function toSearchableArray()
+    {
+        return [
+            'titulo' => $this->titulo,
+            'descripcion' => $this->descripcion,
+            'fecha' => $this->fecha,
+        ];
+    }
+}
+```
+
+---
+
+## ActividadCaso
+
+Actividades específicas vinculadas a casos legales, como audiencias, diligencias o reuniones.
+
+**Namespace:** `App\Models\ActividadCaso`
+
+**Table:** `actividad_casos`
+
+**Traits:**
+- `HasFactory` - Soporte para factories de Laravel
+- `Searchable` - Integración con Laravel Scout
+
+### Fillable Attributes
+
+<ParamField path="titulo" type="string" required>
+  Título de la actividad del caso
+</ParamField>
+
+<ParamField path="descripcion" type="text">
+  Descripción detallada de la actividad
+</ParamField>
+
+<ParamField path="direccion" type="string">
+  Dirección donde se realizará la actividad
+</ParamField>
+
+<ParamField path="fecha" type="date" required>
+  Fecha programada para la actividad
+</ParamField>
+
+<ParamField path="hora" type="time" required>
+  Hora programada para la actividad
+</ParamField>
+
+<ParamField path="id_caso" type="integer" required>
+  ID del caso asociado (foreign key)
+</ParamField>
+
+### Relationships
+
+#### caso()
+
+Relación muchos a uno con el caso legal asociado.
+
+**Type:** `BelongsTo`
+
+**Returns:** `Illuminate\Database\Eloquent\Relations\BelongsTo`
+
+```php
+public function caso(): BelongsTo
+{
+    return $this->belongsTo(Casos::class, 'id_caso', 'id');
+}
+```
+
+### Scout Configuration
+
+```php
+public function toSearchableArray()
+{
+    return [
+        'titulo' => $this->titulo,
+        'descripcion' => $this->descripcion,
+        'fecha' => $this->fecha,
+    ];
+}
+```
+
+### Complete Model Code
+
+```php /home/daytona/workspace/source/app/Models/ActividadCaso.php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Laravel\Scout\Searchable;
+
+class ActividadCaso extends Model
+{
+    use HasFactory, Searchable;
+    
+    protected $fillable = [
+        'titulo',
+        'descripcion',
+        'direccion',
+        'fecha',
+        'hora',
+        'id_caso',
+    ];
+
+    public function caso(): BelongsTo
+    {
+        return $this->belongsTo(Casos::class, 'id_caso', 'id');
+    }
+    
+    public function toSearchableArray()
+    {
+        return [
+            'titulo' => $this->titulo,
+            'descripcion' => $this->descripcion,
+            'fecha' => $this->fecha,
+        ];
+    }
+}
+```
+
+---
+
+## ActividadConciliacion
+
+Actividades específicas para expedientes de conciliación, como audiencias de conciliación o sesiones informativas.
+
+**Namespace:** `App\Models\ActividadConciliacion`
+
+**Table:** `actividad_conciliacions`
+
+**Traits:**
+- `HasFactory` - Soporte para factories de Laravel
+- `Searchable` - Integración con Laravel Scout
+
+### Fillable Attributes
+
+<ParamField path="titulo" type="string" required>
+  Título de la actividad de conciliación
+</ParamField>
+
+<ParamField path="descripcion" type="text">
+  Descripción detallada de la actividad
+</ParamField>
+
+<ParamField path="direccion" type="string">
+  Dirección del centro de conciliación o sala
+</ParamField>
+
+<ParamField path="fecha" type="date" required>
+  Fecha programada para la actividad
+</ParamField>
+
+<ParamField path="hora" type="time" required>
+  Hora programada para la actividad
+</ParamField>
+
+<ParamField path="id_expediente" type="integer" required>
+  ID del expediente asociado (foreign key)
+</ParamField>
+
+### Relationships
+
+#### expediente()
+
+Relación muchos a uno con el expediente de conciliación asociado.
+
+**Type:** `BelongsTo`
+
+**Returns:** `Illuminate\Database\Eloquent\Relations\BelongsTo`
+
+```php
+public function expediente(): BelongsTo
+{
+    return $this->belongsTo(Expedientes::class, 'id_expediente', 'id');
+}
+```
+
+### Scout Configuration
+
+```php
+public function toSearchableArray()
+{
+    return [
+        'titulo' => $this->titulo,
+        'descripcion' => $this->descripcion,
+        'fecha' => $this->fecha,
+    ];
+}
+```
+
+### Complete Model Code
+
+```php /home/daytona/workspace/source/app/Models/ActividadConciliacion.php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Laravel\Scout\Searchable;
+
+class ActividadConciliacion extends Model
+{
+    use HasFactory, Searchable;
+    
+    protected $fillable = [
+        'titulo',
+        'descripcion',
+        'direccion',
+        'fecha',
+        'hora',
+        'id_expediente',
+    ];
+
+    public function expediente(): BelongsTo
+    {
+        return $this->belongsTo(Expedientes::class, 'id_expediente', 'id');
+    }
+
+    public function toSearchableArray()
+    {
+        return [
+            'titulo' => $this->titulo,
+            'descripcion' => $this->descripcion,
+            'fecha' => $this->fecha,
+        ];
+    }
+}
+```
+
+---
+
+## Usage Examples
+
+<CodeGroup>
+
+```php Creating Activities for Cases
+use App\Models\ActividadCaso;
+use App\Models\Casos;
+
+$caso = Casos::find(1);
+
+// Crear actividad directamente
+$actividad = ActividadCaso::create([
+    'titulo' => 'Audiencia Preliminar',
+    'descripcion' => 'Audiencia preliminar para presentación de pruebas',
+    'direccion' => 'Juzgado Civil - Sala 3',
+    'fecha' => '2024-03-15',
+    'hora' => '09:00:00',
+    'id_caso' => $caso->id
+]);
+
+// O crear desde la relación del caso
+$caso->actividadCasos()->create([
+    'titulo' => 'Diligencia de Notificación',
+    'descripcion' => 'Notificación a la parte demandada',
+    'fecha' => '2024-03-10',
+    'hora' => '14:00:00'
+]);
+```
+
+```php Creating Activities for Expedientes
+use App\Models\ActividadConciliacion;
+use App\Models\Expedientes;
+
+$expediente = Expedientes::find(1);
+
+// Crear actividad de conciliación
+$actividad = ActividadConciliacion::create([
+    'titulo' => 'Primera Audiencia de Conciliación',
+    'descripcion' => 'Audiencia inicial para intentar conciliación entre las partes',
+    'direccion' => 'Centro de Conciliación - Sala 1',
+    'fecha' => '2024-03-20',
+    'hora' => '10:00:00',
+    'id_expediente' => $expediente->id
+]);
+
+// O crear desde la relación del expediente
+$expediente->conActividades()->create([
+    'titulo' => 'Segunda Audiencia de Conciliación',
+    'descripcion' => 'Continuación del proceso de conciliación',
+    'fecha' => '2024-03-27',
+    'hora' => '10:00:00',
+    'direccion' => 'Centro de Conciliación - Sala 1'
+]);
+```
+
+```php Searching Activities
+use App\Models\ActividadCaso;
+use App\Models\ActividadConciliacion;
+
+// Buscar actividades de casos por título
+$actividadesCaso = ActividadCaso::search('audiencia')->get();
+
+// Buscar actividades de conciliación por fecha
+$actividadesConciliacion = ActividadConciliacion::search('2024-03')->get();
+
+// Búsqueda usando Eloquent
+$actividadesProximas = ActividadCaso::where('fecha', '>=', now())
+    ->orderBy('fecha', 'asc')
+    ->orderBy('hora', 'asc')
+    ->get();
+```
+
+```php Calendar Integration
+use App\Models\ActividadCaso;
+use App\Models\ActividadConciliacion;
+
+// Obtener todas las actividades del mes
+$mes = '2024-03';
+
+$actividadesCaso = ActividadCaso::whereYear('fecha', 2024)
+    ->whereMonth('fecha', 3)
+    ->with('caso.cliente')
+    ->get();
+
+$actividadesConciliacion = ActividadConciliacion::whereYear('fecha', 2024)
+    ->whereMonth('fecha', 3)
+    ->with('expediente.cliente')
+    ->get();
+
+// Combinar todas las actividades
+$todasActividades = $actividadesCaso->concat($actividadesConciliacion)
+    ->sortBy('fecha')
+    ->sortBy('hora');
+```
+
+```php Daily Schedule
+use App\Models\ActividadCaso;
+use App\Models\ActividadConciliacion;
+
+$fecha = '2024-03-15';
+
+// Actividades del día para casos
+$actividadesCasoHoy = ActividadCaso::whereDate('fecha', $fecha)
+    ->with('caso.cliente')
+    ->orderBy('hora', 'asc')
+    ->get();
+
+// Actividades del día para expedientes
+$actividadesConciliacionHoy = ActividadConciliacion::whereDate('fecha', $fecha)
+    ->with('expediente.cliente')
+    ->orderBy('hora', 'asc')
+    ->get();
+
+// Agenda completa del día
+foreach ($actividadesCasoHoy as $actividad) {
+    echo $actividad->hora . ' - ' . $actividad->titulo;
+    echo ' (Caso: ' . $actividad->caso->n_caso . ')';
+    echo ' - ' . $actividad->caso->cliente->nombre;
+}
+```
+
+```php Upcoming Activities Report
+use App\Models\ActividadCaso;
+use App\Models\ActividadConciliacion;
+
+// Próximas 7 días de actividades
+$fechaInicio = now();
+$fechaFin = now()->addDays(7);
+
+$actividadesProximas = ActividadCaso::whereBetween('fecha', [$fechaInicio, $fechaFin])
+    ->with(['caso.cliente'])
+    ->orderBy('fecha', 'asc')
+    ->orderBy('hora', 'asc')
+    ->get();
+
+$conciliacionesProximas = ActividadConciliacion::whereBetween('fecha', [$fechaInicio, $fechaFin])
+    ->with(['expediente.cliente'])
+    ->orderBy('fecha', 'asc')
+    ->orderBy('hora', 'asc')
+    ->get();
+```
+
+```php Activity Statistics
+use App\Models\ActividadCaso;
+use App\Models\ActividadConciliacion;
+
+// Contar actividades por mes
+$actividadesPorMes = ActividadCaso::selectRaw('YEAR(fecha) as año, MONTH(fecha) as mes, COUNT(*) as total')
+    ->groupBy('año', 'mes')
+    ->orderBy('año', 'desc')
+    ->orderBy('mes', 'desc')
+    ->get();
+
+// Actividades pendientes
+$actividadesPendientes = ActividadCaso::where('fecha', '>=', now())
+    ->count();
+
+$conciliacionesPendientes = ActividadConciliacion::where('fecha', '>=', now())
+    ->count();
+```
+
+</CodeGroup>
+
+## Database Schema
+
+```sql
+-- Actividades base
+CREATE TABLE actividads (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(255) NOT NULL,
+    descripcion TEXT,
+    direccion VARCHAR(255),
+    fecha DATE NOT NULL,
+    hora TIME NOT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    INDEX idx_fecha (fecha),
+    INDEX idx_hora (hora)
+);
+
+-- Actividades de casos
+CREATE TABLE actividad_casos (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(255) NOT NULL,
+    descripcion TEXT,
+    direccion VARCHAR(255),
+    fecha DATE NOT NULL,
+    hora TIME NOT NULL,
+    id_caso BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    FOREIGN KEY (id_caso) REFERENCES casos(id) ON DELETE CASCADE,
+    INDEX idx_id_caso (id_caso),
+    INDEX idx_fecha (fecha),
+    INDEX idx_hora (hora)
+);
+
+-- Actividades de conciliación
+CREATE TABLE actividad_conciliacions (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(255) NOT NULL,
+    descripcion TEXT,
+    direccion VARCHAR(255),
+    fecha DATE NOT NULL,
+    hora TIME NOT NULL,
+    id_expediente BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    FOREIGN KEY (id_expediente) REFERENCES expedientes(id) ON DELETE CASCADE,
+    INDEX idx_id_expediente (id_expediente),
+    INDEX idx_fecha (fecha),
+    INDEX idx_hora (hora)
+);
+```

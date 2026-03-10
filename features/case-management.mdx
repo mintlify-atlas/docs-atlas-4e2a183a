@@ -1,0 +1,392 @@
+---
+title: 'Case Management'
+description: 'Manage legal cases (casos) with process types, opposing parties, documents, and comprehensive tracking'
+icon: 'gavel'
+---
+
+## Overview
+
+The Case Management module (Casos) allows your law firm to manage legal cases from initiation through resolution. Each case is linked to a client and can be associated with multiple process types (tipos de proceso), opposing parties (partes contrarias), and supporting documents. This comprehensive system ensures all case information is organized and accessible.
+
+<CardGroup cols={2}>
+  <Card title="Complete Case Tracking" icon="clipboard-check">
+    Track cases from start to finish with detailed information including case numbers, dates, descriptions, and current status.
+  </Card>
+  <Card title="Process Type Assignment" icon="list-check">
+    Associate multiple legal process types with each case to categorize the nature of legal proceedings.
+  </Card>
+  <Card title="Opposing Party Management" icon="scale-balanced">
+    Track all opposing parties involved in a case with complete contact information and relationships.
+  </Card>
+  <Card title="Document Repository" icon="folder-open">
+    Attach unlimited PDF documents to each case with descriptions and organized storage.
+  </Card>
+</CardGroup>
+
+## Case Data Structure
+
+Each case record includes the following core information:
+
+| Field | Description | Required |
+|-------|-------------|----------|
+| **n_caso** | Unique case number or identifier | Yes |
+| **fecha_inicio** | Case start date | Yes |
+| **fecha_final** | Case completion or closing date | Optional |
+| **descripcion** | Detailed description of the case | Optional |
+| **estado** | Current case status (Active, Closed, Pending, etc.) | Yes |
+| **id_cliente** | Associated client ID (foreign key) | Yes |
+
+<Note>
+The `n_caso` field serves as the primary identifier for the case and is indexed for search functionality. Use a consistent numbering scheme across your firm.
+</Note>
+
+## Creating a New Case
+
+Follow these steps to create a new legal case:
+
+1. **Navigate to Cases Module**
+   - Access via route: `/caso/caso`
+   - Click "Create New Case"
+
+2. **Select Client**
+   - Choose the client from the dropdown list
+   - All active clients are available for selection
+
+3. **Enter Case Details**
+   - **Case Number** (`n_caso`): Enter a unique identifier
+   - **Start Date** (`fecha_inicio`): Set when the case begins
+   - **End Date** (`fecha_final`): Optional, set when case closes
+   - **Description**: Add detailed case information
+   - **Status** (`estado`): Set initial status
+
+4. **Save the Case**
+   - System validates required fields
+   - Case is created and becomes searchable
+   - You're redirected to the case detail view
+
+<Tip>
+Create cases as soon as you receive client approval. This ensures all subsequent activities, documents, and notes are properly associated from the beginning.
+</Tip>
+
+## Case Detail View
+
+The case detail page provides comprehensive access to all case-related information:
+
+### Case Information Section
+- Case number and status
+- Client information with link to client profile
+- Start and end dates
+- Full case description
+
+### Process Types (Tipos de Proceso)
+View and manage all legal process types associated with the case:
+- Assign new process types
+- View existing assignments
+- Remove process types as needed
+
+### Opposing Parties (Partes Contrarias)
+Manage all parties opposing your client:
+- Add new opposing parties
+- View complete opposing party information
+- Remove parties when no longer relevant
+
+### Case Documents
+Access all documents attached to the case:
+- View document list with descriptions
+- Download documents
+- Upload new documents
+- Edit or delete existing documents
+
+## Assigning Process Types
+
+Process types categorize the legal nature of your case:
+
+### What are Process Types?
+
+TipoProceso represents different types of legal processes, such as:
+- Civil litigation
+- Criminal defense
+- Family law matters
+- Contract disputes
+- Labor law cases
+
+### Assignment Process
+
+1. **Access Case Detail Page**
+   - Navigate to the specific case
+
+2. **Add Process Type**
+   - In the Process Types section, click "Assign Process"
+   - Select from available process types
+   - Submit the assignment
+
+3. **View Assigned Processes**
+   - All assigned process types display in a list
+   - Each shows the process type name
+
+4. **Remove Process Type**
+   - Click "Remove" next to any process type
+   - Confirmation message displays
+
+<Note>
+A single case can have multiple process types assigned. This is useful for complex cases involving multiple legal areas.
+</Note>
+
+## Managing Opposing Parties
+
+Track all parties opposing your client in the legal matter:
+
+### Opposing Party Information
+
+Each opposing party (ParteContraria) includes:
+- Name (`nombre`)
+- DNI/RUC number (`dni_ruc`)
+- Company name (`empresa`) if applicable
+- Email address (`email`)
+- Phone number (`telefono`)
+- Physical address (`direccion`)
+- Location reference (`referencia`)
+
+### Adding Opposing Parties
+
+1. **Create or Select Party**
+   - Navigate to the case detail page
+   - Select an existing opposing party from the database
+   - Or create a new opposing party first via `/caso/parteContraria`
+
+2. **Assign to Case**
+   - In the Opposing Parties section, click "Assign Party"
+   - Choose the party from the dropdown
+   - Submit the assignment
+
+3. **View Party Details**
+   - All assigned parties display with full contact information
+   - Click party name to view complete details
+
+4. **Remove Party Assignment**
+   - Click "Remove" to unassign a party from the case
+   - This doesn't delete the party record, only the association
+
+<Warning>
+Opposing party information may be sensitive. Ensure all team members understand confidentiality requirements when accessing this data.
+</Warning>
+
+## Searching Cases
+
+Find cases quickly using the integrated search:
+
+### Search Fields
+The system searches across:
+- Case number (`n_caso`)
+- Case status (`estado`)
+
+### Search Interface
+1. Enter search terms in the search box
+2. Results display in paginated format (5 per page)
+3. Each result shows case number, client name, and status
+4. Click any result to view full case details
+
+<Tip>
+Use partial case numbers for search. The system will return all matching cases, making it easy to find cases when you only remember part of the case number.
+</Tip>
+
+## Editing Cases
+
+Update case information as the matter progresses:
+
+1. **Access Edit Mode**
+   - From the case detail page, click "Edit"
+
+2. **Update Fields**
+   - Modify any field including status, dates, description
+   - Client assignment can be changed if needed
+
+3. **Save Changes**
+   - All fields are revalidated
+   - Success message confirms update
+   - Changes are immediately searchable
+
+<Note>
+Regularly update the case status as the matter progresses. This helps team members understand case priority and current activity level.
+</Note>
+
+## Case Status Management
+
+The `estado` field tracks case progress:
+
+### Common Status Values
+- **Active**: Case is currently being worked on
+- **Pending**: Awaiting client response or external action
+- **Closed**: Case has been completed
+- **On Hold**: Temporarily paused
+- **In Court**: Currently in litigation
+
+### Best Practices
+1. Update status when significant changes occur
+2. Use consistent status terminology across your firm
+3. Set fecha_final when changing status to "Closed"
+4. Review active cases regularly to ensure status accuracy
+
+## Deleting Cases
+
+Case deletion is protected to prevent data loss:
+
+### Deletion Protection
+- Cases with assigned process types cannot be deleted
+- Cases with opposing parties cannot be deleted
+- Cases with documents cannot be deleted
+- System displays error: "No puede eliminar! Antes elimine sus conexiones."
+
+### Safe Deletion Process
+
+1. **Remove All Associations**
+   - Delete or unassign all process types
+   - Remove all opposing party assignments
+   - Delete all case documents
+   - Delete any case activities from the calendar
+
+2. **Delete the Case**
+   - Once all associations are removed, deletion is allowed
+   - Navigate to case detail page
+   - Click "Delete"
+   - Confirmation message appears
+
+<Warning>
+Deletion is permanent and cannot be undone. Consider marking cases as "Archived" or "Closed" instead of deleting them to maintain historical records.
+</Warning>
+
+## Role-Based Access Control
+
+Case management access is restricted to specific roles:
+
+| Role | Access Level |
+|------|-------------|
+| **Encargado** (Manager) | Full access - create, view, edit, delete, assign |
+| **Admin** | Full access - create, view, edit, delete, assign |
+| **Abogado** (Lawyer) | Full access - create, view, edit, delete, assign |
+| **Asistente** (Assistant) | No access to cases |
+
+<Note>
+Assistants (asistente) do not have access to the case management module. They work with expedientes (conciliation processes) instead. This separation ensures clear workflow boundaries.
+</Note>
+
+## Integration with Other Modules
+
+### Client Relationship
+- Every case must be linked to a client (`id_cliente`)
+- View all client cases from the client detail page
+- Case appears in client's case list immediately upon creation
+
+### Document Management
+- Cases can have unlimited PDF documents attached
+- Documents are stored in `/public/documentoCaso/`
+- Each document has a UUID for secure access
+- See [Document Management](/features/document-management) for details
+
+### Calendar Activities
+- Create case-specific activities (ActividadCaso)
+- Schedule hearings, meetings, and deadlines
+- Activities appear on the main calendar
+- See [Calendar & Activities](/features/calendar-activities) for details
+
+### Process Types Catalog
+- Process types are managed separately in the catalog
+- Create new process types via `/caso/tipoProceso`
+- Process types can be reused across multiple cases
+
+### Opposing Parties Catalog
+- Opposing parties are managed in a separate catalog
+- Create new parties via `/caso/parteContraria`
+- Parties can be assigned to multiple cases
+- Search functionality helps find existing parties
+
+## Workflow Example
+
+<AccordionGroup>
+  <Accordion title="Step 1: Initial Case Creation">
+    When a new legal matter arrives:
+    1. Ensure the client exists in the system (create if necessary)
+    2. Create the case with basic information
+    3. Assign initial case number and status
+    4. Add a comprehensive description of the legal matter
+  </Accordion>
+
+  <Accordion title="Step 2: Case Configuration">
+    After initial creation:
+    1. Assign relevant process types to categorize the case
+    2. Add all opposing parties with complete contact information
+    3. Upload initial documents (demand letters, contracts, etc.)
+    4. Create calendar activities for upcoming deadlines
+  </Accordion>
+
+  <Accordion title="Step 3: Ongoing Case Management">
+    As the case progresses:
+    1. Update case status regularly
+    2. Add new documents as they're created or received
+    3. Update opposing party information if contact details change
+    4. Create calendar activities for hearings and important dates
+    5. Add notes to the case description for important developments
+  </Accordion>
+
+  <Accordion title="Step 4: Case Closure">
+    When the case concludes:
+    1. Update status to "Closed"
+    2. Set the fecha_final to the case completion date
+    3. Upload final documents (judgments, settlements, etc.)
+    4. Update description with case outcome
+    5. Ensure all activities are marked complete
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<Tip>
+**Use Descriptive Case Numbers**: Implement a case numbering system that includes the year, client initials, or case type. For example: "2024-JD-CIVIL-001" helps identify cases at a glance.
+</Tip>
+
+<Tip>
+**Update Status Regularly**: Make status updates a weekly habit. This keeps your team informed and helps with workload management.
+</Tip>
+
+<Tip>
+**Detailed Descriptions**: Write comprehensive case descriptions. Include key facts, legal theories, and strategic considerations. Future team members will thank you.
+</Tip>
+
+<Tip>
+**Document Everything**: Upload all relevant documents immediately. Don't wait to organize them - attach them when they're received or created.
+</Tip>
+
+## Technical Implementation
+
+For developers and system administrators:
+
+### Model Location
+`app/Models/Casos.php`
+
+### Controller
+`app/Http/Controllers/CasosController.php`
+
+### Routes
+- List cases: `GET /caso/caso`
+- Create case: `POST /caso/caso`
+- View case: `GET /caso/caso/{caso}`
+- Edit case: `PUT /caso/caso/{caso}`
+- Delete case: `DELETE /caso/caso/{caso}`
+- Assign process: `POST /caso/caso/{caso}/procesos`
+- Remove process: `DELETE /caso/caso/procesos/{cas_proceso}`
+- Assign party: `POST /caso/caso/{caso}/p_contrarias`
+- Remove party: `DELETE /caso/caso/p_contrarias/{cas_contraria}`
+
+### Related Models
+- `Cliente.php` - Client relationship
+- `TipoProceso.php` - Process types
+- `ParteContraria.php` - Opposing parties
+- `Caso_has_proceso.php` - Process type pivot table
+- `Caso_has_PContraria.php` - Opposing party pivot table
+- `CasoDocumento.php` - Case documents
+- `ActividadCaso.php` - Case activities
+
+### Database Tables
+- `casos` - Main case table
+- `caso_has_procesos` - Case-process type relationships
+- `caso_has_p_contrarias` - Case-opposing party relationships

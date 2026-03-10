@@ -1,0 +1,233 @@
+---
+title: 'Casos Model'
+description: 'Gestión de casos legales en el sistema'
+---
+
+## Overview
+
+El modelo `Casos` representa los casos legales gestionados por el despacho. Cada caso está asociado a un cliente y contiene información sobre el proceso legal, fechas y estado del caso.
+
+**Namespace:** `App\Models\Casos`
+
+**Table:** `casos`
+
+**Traits:**
+- `HasFactory` - Soporte para factories de Laravel
+- `Searchable` - Integración con Laravel Scout para búsqueda
+
+## Fillable Attributes
+
+<ParamField path="n_caso" type="string" required>
+  Número único del caso
+</ParamField>
+
+<ParamField path="fecha_inicio" type="date" required>
+  Fecha de inicio del caso
+</ParamField>
+
+<ParamField path="fecha_final" type="date">
+  Fecha de finalización o cierre del caso
+</ParamField>
+
+<ParamField path="descripcion" type="text">
+  Descripción detallada del caso legal
+</ParamField>
+
+<ParamField path="estado" type="string" required>
+  Estado actual del caso (abierto, en proceso, cerrado, etc.)
+</ParamField>
+
+<ParamField path="id_cliente" type="integer" required>
+  ID del cliente asociado al caso (foreign key)
+</ParamField>
+
+## Relationships
+
+### cliente()
+
+Relación muchos a uno con el cliente propietario del caso.
+
+**Type:** `BelongsTo`
+
+**Returns:** `Illuminate\Database\Eloquent\Relations\BelongsTo`
+
+```php
+public function cliente(): BelongsTo
+{
+    return $this->belongsTo(Cliente::class, 'id_cliente', 'id');
+}
+```
+
+## Related Models
+
+El modelo Casos se relaciona con otros modelos del sistema:
+
+- **Caso_has_proceso** - Tabla pivot para procesos asociados al caso
+- **Caso_has_PContraria** - Relación con partes contrarias en el caso
+- **CasoDocumento** - Documentos asociados al caso legal
+
+## Laravel Scout Configuration
+
+El modelo Casos está configurado para búsqueda con Laravel Scout. Los siguientes campos son indexados:
+
+```php
+public function toSearchableArray()
+{
+    return [
+        'n_caso' => $this->n_caso,
+        'estado' => $this->estado,
+    ];
+}
+```
+
+## Usage Examples
+
+<CodeGroup>
+
+```php Creating a Case
+use App\Models\Casos;
+
+$caso = Casos::create([
+    'n_caso' => 'CASO-2024-001',
+    'fecha_inicio' => '2024-01-15',
+    'descripcion' => 'Caso de demanda laboral por despido injustificado',
+    'estado' => 'abierto',
+    'id_cliente' => 1
+]);
+```
+
+```php Searching Cases
+use App\Models\Casos;
+
+// Búsqueda por número de caso
+$caso = Casos::search('CASO-2024-001')->first();
+
+// Búsqueda por estado
+$casosAbiertos = Casos::search('abierto')->get();
+
+// Búsqueda usando Eloquent
+$casos = Casos::where('estado', 'en proceso')
+    ->orderBy('fecha_inicio', 'desc')
+    ->get();
+```
+
+```php Accessing Client Relationship
+use App\Models\Casos;
+
+$caso = Casos::find(1);
+
+// Obtener información del cliente
+$cliente = $caso->cliente;
+echo $cliente->nombre . ' ' . $cliente->apellidos;
+
+// Eager loading para optimizar queries
+$casos = Casos::with('cliente')->get();
+```
+
+```php Updating Case Status
+use App\Models\Casos;
+
+$caso = Casos::find(1);
+$caso->update([
+    'estado' => 'cerrado',
+    'fecha_final' => now()
+]);
+
+// Actualizar múltiples campos
+$caso->update([
+    'estado' => 'en proceso',
+    'descripcion' => $caso->descripcion . '\n\nActualización: Nueva audiencia programada.'
+]);
+```
+
+```php Filtering Cases by Client
+use App\Models\Casos;
+
+// Casos de un cliente específico
+$casosPorCliente = Casos::where('id_cliente', 1)
+    ->orderBy('fecha_inicio', 'desc')
+    ->get();
+
+// Casos activos de un cliente
+$casosActivos = Casos::where('id_cliente', 1)
+    ->whereIn('estado', ['abierto', 'en proceso'])
+    ->get();
+```
+
+```php Date Range Queries
+use App\Models\Casos;
+
+// Casos iniciados en el último mes
+$casosRecientes = Casos::where('fecha_inicio', '>=', now()->subMonth())
+    ->orderBy('fecha_inicio', 'desc')
+    ->get();
+
+// Casos cerrados este año
+$casosCerrados = Casos::whereYear('fecha_final', date('Y'))
+    ->where('estado', 'cerrado')
+    ->get();
+```
+
+</CodeGroup>
+
+## Database Schema
+
+```sql
+CREATE TABLE casos (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    n_caso VARCHAR(255) NOT NULL,
+    fecha_inicio DATE NOT NULL,
+    fecha_final DATE NULL,
+    descripcion TEXT,
+    estado VARCHAR(255) NOT NULL,
+    id_cliente BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    FOREIGN KEY (id_cliente) REFERENCES clientes(id) ON DELETE CASCADE,
+    INDEX idx_n_caso (n_caso),
+    INDEX idx_estado (estado),
+    INDEX idx_id_cliente (id_cliente)
+);
+```
+
+## Complete Model Code
+
+```php /home/daytona/workspace/source/app/Models/Casos.php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Laravel\Scout\Searchable;
+
+class Casos extends Model
+{
+    use HasFactory, Searchable;
+    
+    protected $fillable = [
+        'n_caso',
+        'fecha_inicio',
+        'fecha_final',
+        'descripcion',
+        'estado',
+        'id_cliente',
+    ];
+
+    public function cliente(): BelongsTo
+    {
+        return $this->belongsTo(Cliente::class, 'id_cliente', 'id');
+    }
+
+    public function toSearchableArray()
+    {
+        return [
+            'n_caso' => $this->n_caso,
+            'estado' => $this->estado,
+        ];
+    }
+}
+```

@@ -1,0 +1,520 @@
+---
+title: 'Document Management'
+description: 'Upload, organize, and manage PDF documents for both cases and expedientes with secure storage and access control'
+icon: 'file-pdf'
+---
+
+## Overview
+
+The Document Management system provides secure storage and organization for all case and expediente documents. The system supports PDF file uploads with comprehensive metadata, secure access via UUIDs, and organized storage paths. Each document type (case documents and expediente documents) has its own model, controller, and storage structure.
+
+<CardGroup cols={2}>
+  <Card title="Secure Document Storage" icon="lock">
+    Documents are stored securely with UUID-based access control, preventing unauthorized viewing or downloading.
+  </Card>
+  <Card title="Rich Metadata" icon="tags">
+    Each document includes type classification, descriptions, and expediente-specific fields like acta numbers and folio information.
+  </Card>
+  <Card title="Dual Document Systems" icon="folder-tree">
+    Separate document management for casos (legal cases) and expedientes (conciliation processes) with tailored metadata.
+  </Card>
+  <Card title="View and Download" icon="download">
+    Documents can be viewed in-browser or downloaded for offline access with secure URL routing.
+  </Card>
+</CardGroup>
+
+## Document Types
+
+The system manages two distinct document categories:
+
+### Case Documents (CasoDocumento)
+Documents attached to legal cases (casos), stored in `/public/documentoCaso/`
+
+### Expediente Documents (ExpedienteDocumento)
+Documents attached to conciliation expedientes, stored in `/public/documento/`
+
+<Note>
+Both document types use identical upload, view, download, and deletion processes, but have different metadata fields and storage locations.
+</Note>
+
+## Case Document Structure
+
+Each CasoDocumento record contains:
+
+| Field | Description | Required |
+|-------|-------------|----------|
+| **uuid** | Unique identifier for secure access | Auto-generated |
+| **tipo_documento** | Document type/category | Yes |
+| **descripcion** | Document description or notes | Optional |
+| **documento** | Stored filename | Auto-generated |
+| **id_caso** | Associated case ID (foreign key) | Yes |
+
+### Document Type Examples
+
+- Demand letters
+- Court filings
+- Evidence documents
+- Client correspondence
+- Legal opinions
+- Contracts
+- Settlement agreements
+- Court orders
+
+## Expediente Document Structure
+
+Each ExpedienteDocumento record contains:
+
+| Field | Description | Required |
+|-------|-------------|----------|
+| **uuid** | Unique identifier for secure access | Auto-generated |
+| **tipo_documento** | Document type/category | Yes |
+| **n_acta** | Acta (minutes) number | Optional |
+| **folio** | Folio number for record keeping | Optional |
+| **tipo_acta** | Type of acta document | Optional |
+| **descripcion** | Document description or notes | Optional |
+| **documento** | Stored filename | Auto-generated |
+| **id_expediente** | Associated expediente ID (foreign key) | Yes |
+
+### Expediente Document Type Examples
+
+- Conciliation requests
+- Session minutes (actas)
+- Party responses
+- Evidence submissions
+- Agreement drafts
+- Final agreements
+- Closure actas
+- Attendance records
+
+<Tip>
+Expediente documents include special fields for actas (official minutes). Use `n_acta` to number session minutes sequentially and `tipo_acta` to categorize different minute types.
+</Tip>
+
+## Uploading Documents
+
+The upload process is similar for both document types:
+
+### Upload Requirements
+
+- **File Format**: PDF only (`.pdf`)
+- **Maximum Size**: 15,200 KB (approximately 15 MB)
+- **File Validation**: System validates format and size before upload
+
+### Case Document Upload Process
+
+1. **Navigate to Case**
+   - Open the specific case detail page
+   - Locate the Documents section
+
+2. **Access Upload Form**
+   - Click "Upload Document" or "Add Document"
+   - Routed to `/caso/caso/{caso}/file`
+
+3. **Complete Upload Form**
+   - **Document Type** (`tipo_documento`): Select or enter document category
+   - **Description** (`descripcion`): Add notes about the document
+   - **File Selection**: Choose PDF file from your device
+
+4. **Submit Upload**
+   - System validates file format (must be PDF)
+   - System checks file size (max 15 MB)
+   - File is renamed with timestamp prefix for uniqueness
+   - Document is saved to `/public/documentoCaso/`
+   - UUID is auto-generated for secure access
+   - Record is linked to case via `id_caso`
+
+5. **Confirmation**
+   - Success message: "Documento registrado correctamente."
+   - Redirected to case index page
+   - Document appears in case document list
+
+### Expediente Document Upload Process
+
+1. **Navigate to Expediente**
+   - Open the specific expediente detail page
+   - Locate the Documents section
+
+2. **Access Upload Form**
+   - Click "Upload Document"
+   - Routed to `/conciliacion/expediente/{expediente}/file`
+
+3. **Complete Upload Form**
+   - **Document Type** (`tipo_documento`): Select document category
+   - **Acta Type** (`tipo_acta`): If applicable, specify acta type
+   - **Acta Number** (`n_acta`): Sequential number for minutes
+   - **Folio** (`folio`): Record-keeping folio number
+   - **Description** (`descripcion`): Add notes about the document
+   - **File Selection**: Choose PDF file from device
+
+4. **Submit Upload**
+   - System validates file format and size
+   - File renamed with timestamp for uniqueness
+   - Document saved to `/public/documento/`
+   - UUID auto-generated
+   - Record linked to expediente via `id_expediente`
+
+5. **Confirmation**
+   - Success message: "Documento registrado correctamente."
+   - Redirected to expediente index
+   - Document appears in expediente document list
+
+<Note>
+The system automatically generates a unique filename by prepending a timestamp to the original filename. This prevents filename conflicts and maintains file integrity.
+</Note>
+
+## Viewing Documents
+
+Documents can be viewed directly in the browser:
+
+### In-Browser Viewing
+
+**For Case Documents:**
+- Route: `GET /caso/caso/file/{uuid}`
+- Click "View" next to any document
+- PDF opens in browser window
+- Uses Laravel's `response()->file()` method
+
+**For Expediente Documents:**
+- Route: `GET /conciliacion/expediente/file/{uuid}`
+- Click "View" next to any document
+- PDF opens in browser window
+
+### Security Features
+
+- Access via UUID (not filename) prevents direct file access
+- System verifies document exists before serving
+- 404 error if UUID not found
+- Respects Laravel authentication middleware
+
+<Tip>
+In-browser viewing is perfect for quick document review without downloading. Most modern browsers have built-in PDF viewers with zoom, search, and print capabilities.
+</Tip>
+
+## Downloading Documents
+
+Download documents for offline access or sharing:
+
+### Download Process
+
+**For Case Documents:**
+- Route: `GET /caso/caso/file/download/{uuid}`
+- Click "Download" next to document
+- Browser prompts file download
+- Original filename is preserved
+
+**For Expediente Documents:**
+- Route: `GET /conciliacion/expediente/file/download/{uuid}`
+- Click "Download" button
+- File downloads with original name
+
+### How Downloads Work
+
+1. User clicks download link
+2. System looks up document by UUID
+3. System retrieves file path from database
+4. Laravel's `response()->download()` serves file
+5. Browser receives file with proper headers
+6. User saves file locally
+
+<Note>
+Downloaded files retain their original names (with timestamp prefix). This helps users identify files when saving multiple documents.
+</Note>
+
+## Editing Document Metadata
+
+Update document information without re-uploading the file:
+
+### Case Document Edit Process
+
+1. **Access Edit Form**
+   - From case detail page, click "Edit" next to document
+   - Route: `GET /caso/caso/file/{id}/edit`
+
+2. **Update Metadata**
+   - Modify document type
+   - Update description
+   - Optionally replace the PDF file
+
+3. **File Replacement (Optional)**
+   - If new file uploaded:
+     - Old file is deleted from storage
+     - New file is saved with timestamp
+     - Filename updated in database
+   - If no new file:
+     - Existing file remains unchanged
+     - Only metadata is updated
+
+4. **Save Changes**
+   - Route: `PUT /caso/caso/{id}/file`
+   - Success message: "Documento Actualisado correctamente."
+   - Redirected to case index
+
+### Expediente Document Edit Process
+
+1. **Access Edit Form**
+   - From expediente detail, click "Edit" next to document
+   - Route: `GET /conciliacion/expediente/file/{id}/edit`
+
+2. **Update Metadata**
+   - Modify document type, acta type, acta number, folio
+   - Update description
+   - Optionally replace PDF file
+
+3. **File Replacement**
+   - Same process as case documents
+   - Old file deleted if new file uploaded
+   - Filename updated accordingly
+
+4. **Save Changes**
+   - Route: `PUT /conciliacion/expediente/{id}/file`
+   - Success message displayed
+   - Redirected to expediente index
+
+<Warning>
+When replacing a document file during edit, the old file is permanently deleted from storage. Ensure you have backups if needed before replacing important documents.
+</Warning>
+
+## Deleting Documents
+
+Remove documents from cases or expedientes:
+
+### Deletion Process
+
+**For Case Documents:**
+1. Navigate to case detail page
+2. Locate document in documents list
+3. Click "Delete" button
+4. System performs deletion:
+   - Checks if physical file exists in `/public/documentoCaso/`
+   - Deletes physical file from storage
+   - Deletes database record
+5. Success message: "Documento eliminado correctamente."
+6. Returns to previous page
+
+**For Expediente Documents:**
+1. Navigate to expediente detail page
+2. Locate document in list
+3. Click "Delete"
+4. System performs deletion:
+   - Checks if file exists in `/public/documento/`
+   - Deletes physical file
+   - Deletes database record
+5. Success message displayed
+6. Returns to previous page
+
+### Deletion Safety
+
+- Physical file is deleted only if it exists (prevents errors)
+- Database record is always deleted
+- Deletion is permanent and cannot be undone
+- No cascading effects on case or expediente
+
+<Warning>
+Document deletion is permanent. The physical PDF file and database record are both removed. Consider downloading important documents before deletion for archival purposes.
+</Warning>
+
+## UUID-Based Security
+
+The system uses UUIDs for document access control:
+
+### What are UUIDs?
+
+Universally Unique Identifiers (UUIDs) are 36-character strings like:
+```
+9a1c4f2e-5d7b-4e8a-9c1f-3b5e7d9a2c4f
+```
+
+### Security Benefits
+
+1. **Unpredictable Access**
+   - URLs cannot be guessed or enumerated
+   - Sequential ID scanning is prevented
+
+2. **Secure Sharing**
+   - Documents can be shared via UUID links
+   - Links don't reveal case or expediente IDs
+
+3. **Access Control**
+   - Combined with authentication middleware
+   - Only authenticated users can access documents
+   - Role-based access restrictions apply
+
+### UUID Generation
+
+UUIDs are automatically generated using Laravel's `Str::orderedUuid()`:
+- Generated during document upload
+- Stored in database `uuid` field
+- Used in all view and download routes
+
+<Note>
+Ordered UUIDs maintain time-based ordering while providing security. This helps with database indexing and performance.
+</Note>
+
+## File Storage Structure
+
+### Case Documents
+- **Storage Path**: `/public/documentoCaso/`
+- **Filename Format**: `{timestamp}_{original_filename}.pdf`
+- **Example**: `1679234567_demand_letter.pdf`
+
+### Expediente Documents
+- **Storage Path**: `/public/documento/`
+- **Filename Format**: `{timestamp}_{original_filename}.pdf`
+- **Example**: `1679234890_acta_session_01.pdf`
+
+### Storage Best Practices
+
+<AccordionGroup>
+  <Accordion title="Regular Backups">
+    Implement regular backups of both storage directories:
+    - `/public/documentoCaso/` for case documents
+    - `/public/documento/` for expediente documents
+    
+    Include database backups to maintain UUID-filename relationships.
+  </Accordion>
+
+  <Accordion title="Storage Monitoring">
+    Monitor disk space usage:
+    - Track total storage consumption
+    - Set alerts for low disk space
+    - Implement storage quotas if needed
+    - Review and archive old documents periodically
+  </Accordion>
+
+  <Accordion title="File Permissions">
+    Ensure proper file permissions:
+    - Web server must have write access to storage directories
+    - Files should not be executable
+    - Restrict direct URL access (use routing only)
+    - Implement proper `.htaccess` or nginx rules
+  </Accordion>
+
+  <Accordion title="Disaster Recovery">
+    Prepare for data loss scenarios:
+    - Maintain offsite backups
+    - Document restore procedures
+    - Test recovery process regularly
+    - Keep backup-database synchronization
+  </Accordion>
+</AccordionGroup>
+
+## Role-Based Access
+
+### Case Documents Access
+
+Available to roles with case management access:
+
+| Role | Access Level |
+|------|-------------|
+| **Encargado** | Full access - upload, view, edit, delete |
+| **Admin** | Full access - upload, view, edit, delete |
+| **Abogado** | Full access - upload, view, edit, delete |
+| **Asistente** | No access |
+
+### Expediente Documents Access
+
+Available to roles with expediente management access:
+
+| Role | Access Level |
+|------|-------------|
+| **Encargado** | Full access - upload, view, edit, delete |
+| **Admin** | Full access - upload, view, edit, delete |
+| **Asistente** | Full access - upload, view, edit, delete |
+| **Abogado** | No access |
+
+<Note>
+Document access follows the same role restrictions as the parent module (cases or expedientes). This maintains consistent security boundaries.
+</Note>
+
+## Document Organization Best Practices
+
+<Tip>
+**Consistent Type Classification**: Establish standard document type categories and use them consistently. This improves searchability and organization.
+</Tip>
+
+<Tip>
+**Descriptive Names**: Use clear, descriptive names when uploading documents. The original filename is preserved in the stored name, aiding future identification.
+</Tip>
+
+<Tip>
+**Detailed Descriptions**: Always fill in the description field with relevant information about the document's content, purpose, or significance.
+</Tip>
+
+<Tip>
+**Sequential Acta Numbering**: For expediente documents, maintain sequential acta numbers (1, 2, 3...) to easily track session chronology.
+</Tip>
+
+<Tip>
+**Upload Promptly**: Upload documents immediately after creation or receipt. This ensures complete case/expediente documentation.
+</Tip>
+
+## Limitations and Constraints
+
+### File Format Limitation
+- **PDF Only**: System accepts only PDF files
+- Other formats (Word, images, etc.) must be converted to PDF before upload
+- This ensures consistent viewing across all devices and browsers
+
+### File Size Limit
+- **Maximum Size**: 15,200 KB (≈15 MB)
+- Large files must be compressed or split
+- Configuration can be modified in controller validation rules
+
+### Storage Capacity
+- Limited by server disk space
+- Monitor usage regularly
+- Implement archival strategy for old documents
+
+<Warning>
+The 15 MB file size limit is enforced at the application level. Ensure your web server (Apache/Nginx) and PHP configuration also support files of this size by checking `upload_max_filesize` and `post_max_size` in `php.ini`.
+</Warning>
+
+## Technical Implementation
+
+For developers and system administrators:
+
+### Case Documents
+
+**Model**: `app/Models/CasoDocumento.php`
+
+**Controller**: `app/Http/Controllers/CasoDocumentoController.php`
+
+**Routes**:
+- Create form: `GET /caso/caso/{caso}/file`
+- Upload: `POST /caso/caso/{caso}`
+- Edit form: `GET /caso/caso/file/{id}/edit`
+- Update: `PUT /caso/caso/{id}/file`
+- Delete: `DELETE /caso/caso/{caso}/file`
+- Download: `GET /caso/caso/file/download/{uuid}`
+- View: `GET /caso/caso/file/{uuid}`
+
+**Storage**: `/public/documentoCaso/`
+
+**Table**: `caso_documentos`
+
+### Expediente Documents
+
+**Model**: `app/Models/ExpedienteDocumento.php`
+
+**Controller**: `app/Http/Controllers/ExpedienteDocumentosController.php`
+
+**Routes**:
+- Create form: `GET /conciliacion/expediente/{expediente}/file`
+- Upload: `POST /conciliacion/expediente/{expediente}`
+- Edit form: `GET /conciliacion/expediente/file/{id}/edit`
+- Update: `PUT /conciliacion/expediente/{id}/file`
+- Delete: `DELETE /conciliacion/expediente/{expediente}/file`
+- Download: `GET /conciliacion/expediente/file/download/{uuid}`
+- View: `GET /conciliacion/expediente/file/{uuid}`
+
+**Storage**: `/public/documento/`
+
+**Table**: `expediente_documentos`
+
+### Key Implementation Details
+
+- **File Validation**: Uses Laravel's validation rules `['required', 'mimes:pdf', 'max:15200']`
+- **File Storage**: Laravel's `move()` method stores files in public directories
+- **UUID Generation**: `Str::orderedUuid()` creates time-ordered UUIDs
+- **File Deletion**: `File::exists()` and `File::delete()` manage physical files
+- **Filename Format**: `time().'_'.$file->getClientOriginalName()`

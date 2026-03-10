@@ -1,0 +1,565 @@
+---
+title: 'ClienteController'
+description: 'Controller for managing clients (clientes) with full CRUD operations, search functionality, and relationship tracking'
+---
+
+## Overview
+
+The `ClienteController` manages client information in the Sistema de Abogados application. It provides complete CRUD (Create, Read, Update, Delete) operations with search functionality and displays relationships to expedientes.
+
+**Namespace:** `App\Http\Controllers`
+
+**Extends:** `Controller`
+
+## Dependencies
+
+The controller uses the following models:
+- `Cliente` - Main client model
+- `Expedientes` - Expediente model for displaying client relationships
+
+## Methods
+
+### index()
+
+Lists all clients with pagination and search functionality.
+
+**Purpose:** Display a paginated list of clients with optional search filtering
+
+**Parameters:** None (uses `request('search')` for search query)
+
+**Returns:** View `clientes.index` with clients
+
+**Response Data:**
+<ResponseField name="clientes" type="Collection">
+  Paginated collection of clients (5 per page)
+</ResponseField>
+
+**Code Example:**
+```php
+public function index()
+{
+    $clientes = Cliente::search(request('search'))->paginate(5);
+    return view('clientes.index', compact('clientes'));
+}
+```
+
+**Route:** `clientes.index`
+
+**Notes:**
+- Implements search functionality through the Cliente model's search scope
+- Paginates results at 5 clients per page
+
+---
+
+### create()
+
+Displays the client creation form.
+
+**Purpose:** Show the form for creating a new client
+
+**Parameters:** None
+
+**Returns:** View `clientes.create`
+
+**Code Example:**
+```php
+public function create()
+{
+    return view('clientes.create');
+}
+```
+
+**Route:** `clientes.create`
+
+---
+
+### store()
+
+Creates a new client with validation.
+
+**Purpose:** Store a new client in the database with comprehensive validation
+
+**Request Parameters:**
+<ParamField path="nombre" type="string" required>
+  Client's first name
+</ParamField>
+<ParamField path="apellidos" type="string" required>
+  Client's last name(s)
+</ParamField>
+<ParamField path="genero" type="string">
+  Client's gender (optional)
+</ParamField>
+<ParamField path="dni_ruc" type="string" required>
+  Client's DNI or RUC identification number
+</ParamField>
+<ParamField path="empresa" type="string">
+  Company name if client represents an organization (optional)
+</ParamField>
+<ParamField path="email" type="string">
+  Client's email address (optional)
+</ParamField>
+<ParamField path="telefono" type="string">
+  Client's phone number (optional)
+</ParamField>
+<ParamField path="direccion" type="string">
+  Client's physical address (optional)
+</ParamField>
+<ParamField path="referencia" type="string">
+  Address reference or additional notes (optional)
+</ParamField>
+<ParamField path="estado_cliente" type="string" required>
+  Client status (e.g., Active, Inactive)
+</ParamField>
+
+**Validation Rules:**
+```php
+[
+    'nombre' => 'required', 
+    'apellidos' => 'required', 
+    'genero' => 'nullable', 
+    'dni_ruc' => 'required', 
+    'empresa' => 'nullable',
+    'email' => 'nullable', 
+    'telefono' => 'nullable',
+    'direccion' => 'nullable',
+    'referencia' => 'nullable',
+    'estado_cliente' => 'required'
+]
+```
+
+**Returns:** Redirect to `clientes.index` with success message
+
+**Success Message:** "Cliente registrado correctamente."
+
+**Code Example:**
+```php
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'nombre' => 'required', 
+        'apellidos' => 'required', 
+        'genero' => 'nullable', 
+        'dni_ruc' => 'required', 
+        'empresa' => 'nullable',
+        'email' => 'nullable', 
+        'telefono' => 'nullable',
+        'direccion' => 'nullable',
+        'referencia' => 'nullable',
+        'estado_cliente' => 'required'
+    ]);
+    Cliente::create($validated);
+    return to_route('clientes.index')
+        ->with('message', 'Cliente registrado correctamente.');
+}
+```
+
+**Route:** `clientes.store`
+
+---
+
+### show()
+
+Displays detailed information for a specific client.
+
+**Purpose:** Show complete client details including related expedientes
+
+**Parameters:**
+<ParamField path="cliente" type="Cliente" required>
+  Client model instance (route model binding)
+</ParamField>
+
+**Returns:** View `clientes.cliente` with client data and expedientes
+
+**Response Data:**
+<ResponseField name="cliente" type="Cliente">
+  The client instance with all details
+</ResponseField>
+<ResponseField name="expedientes" type="Collection">
+  All expedientes in the system (for relationship display)
+</ResponseField>
+
+**Code Example:**
+```php
+public function show(Cliente $cliente)
+{
+    $expedientes = Expedientes::all();
+    return view('clientes.cliente', compact('cliente','expedientes'));
+}
+```
+
+**Route:** `clientes.show`
+
+**Notes:**
+- Displays client information along with all expedientes
+- Useful for viewing client's case history and relationships
+
+---
+
+### edit()
+
+Displays the client edit form.
+
+**Purpose:** Show the form for editing an existing client
+
+**Parameters:**
+<ParamField path="cliente" type="Cliente" required>
+  Client model instance (route model binding)
+</ParamField>
+
+**Returns:** View `clientes.edit` with client data
+
+**Response Data:**
+<ResponseField name="cliente" type="Cliente">
+  The client instance to edit
+</ResponseField>
+
+**Code Example:**
+```php
+public function edit(Cliente $cliente)
+{
+    return view('clientes.edit', compact('cliente'));
+}
+```
+
+**Route:** `clientes.edit`
+
+---
+
+### update()
+
+Updates an existing client with validation.
+
+**Purpose:** Update client information in the database
+
+**Parameters:**
+<ParamField path="cliente" type="Cliente" required>
+  Client model instance (route model binding)
+</ParamField>
+
+**Request Parameters:**
+<ParamField path="nombre" type="string" required>
+  Client's first name
+</ParamField>
+<ParamField path="apellidos" type="string" required>
+  Client's last name(s)
+</ParamField>
+<ParamField path="genero" type="string">
+  Client's gender (optional)
+</ParamField>
+<ParamField path="dni_ruc" type="string" required>
+  Client's DNI or RUC identification number
+</ParamField>
+<ParamField path="empresa" type="string">
+  Company name (optional)
+</ParamField>
+<ParamField path="email" type="string">
+  Client's email address (optional)
+</ParamField>
+<ParamField path="telefono" type="string">
+  Client's phone number (optional)
+</ParamField>
+<ParamField path="direccion" type="string">
+  Client's physical address (optional)
+</ParamField>
+<ParamField path="referencia" type="string">
+  Address reference (optional)
+</ParamField>
+<ParamField path="estado_cliente" type="string" required>
+  Client status
+</ParamField>
+
+**Validation Rules:**
+```php
+[
+    'nombre' => 'required', 
+    'apellidos' => 'required',
+    'genero' => 'nullable',
+    'dni_ruc' => 'required',
+    'empresa' => 'nullable',
+    'email' => 'nullable',
+    'telefono' => 'nullable',
+    'direccion' => 'nullable',
+    'referencia' => 'nullable',
+    'estado_cliente'=> 'required'
+]
+```
+
+**Returns:** Redirect to `clientes.index` with success message
+
+**Success Message:** "Permiso actualisado correctamente."
+
+**Code Example:**
+```php
+public function update(Request $request, Cliente $cliente)
+{
+    $validated = $request->validate([
+        'nombre' => 'required', 
+        'apellidos' => 'required',
+        'genero' => 'nullable',
+        'dni_ruc' => 'required',
+        'empresa' => 'nullable',
+        'email' => 'nullable',
+        'telefono' => 'nullable',
+        'direccion' => 'nullable',
+        'referencia' => 'nullable',
+        'estado_cliente'=> 'required'
+    ]);
+    $cliente->update($validated);
+
+    return to_route('clientes.index')
+        ->with('message', 'Permiso actualisado correctamente.');
+}
+```
+
+**Route:** `clientes.update`
+
+**Notes:**
+- Success message says "Permiso actualisado" (Permission updated) - appears to be a typo in original code
+- Should likely say "Cliente actualisado correctamente"
+
+---
+
+### destroy()
+
+Deletes a client from the database.
+
+**Purpose:** Remove a client with foreign key constraint handling
+
+**Parameters:**
+<ParamField path="cliente" type="Cliente" required>
+  Client model instance (route model binding)
+</ParamField>
+
+**Returns:** 
+- Success: Redirect to `clientes.index` with success message
+- Error: Back with alert message if constraints exist
+
+**Success Message:** "Cliente eliminado correctamente."
+
+**Error Message:** "Este cliente esta asignado a un expedientes."
+
+**Code Example:**
+```php
+public function destroy(Cliente $cliente)
+{
+    try{
+        $cliente->delete();
+        return to_route('clientes.index')
+            ->with('messagedestroy', 'Cliente eliminado correctamente.');
+    }catch(\Exception $e){
+        return back()->with('messageAlert', 
+            'Este cliente esta asignado a un expedientes.');
+    }
+}
+```
+
+**Route:** `clientes.destroy`
+
+**Notes:** 
+- Uses try-catch to handle foreign key constraint violations
+- Client cannot be deleted if assigned to expedientes or casos
+- Must remove client associations before deletion
+
+---
+
+## Usage Examples
+
+### Creating a New Client (Individual)
+
+```php
+// POST /clientes
+$data = [
+    'nombre' => 'Juan Carlos',
+    'apellidos' => 'Rodríguez Pérez',
+    'genero' => 'M',
+    'dni_ruc' => '12345678',
+    'empresa' => null,
+    'email' => 'juan.rodriguez@email.com',
+    'telefono' => '+51 987654321',
+    'direccion' => 'Av. Principal 123, Lima',
+    'referencia' => 'Edificio azul, tercer piso',
+    'estado_cliente' => 'Activo'
+];
+```
+
+### Creating a Corporate Client
+
+```php
+// POST /clientes
+$data = [
+    'nombre' => 'María',
+    'apellidos' => 'Gómez Torres',
+    'genero' => 'F',
+    'dni_ruc' => '20123456789', // RUC format
+    'empresa' => 'Constructora ABC S.A.C.',
+    'email' => 'contacto@constructoraabc.com',
+    'telefono' => '+51 01 234 5678',
+    'direccion' => 'Av. Industrial 456, Lima',
+    'referencia' => 'Zona industrial, oficina principal',
+    'estado_cliente' => 'Activo'
+];
+```
+
+### Updating Client Information
+
+```php
+// PUT /clientes/{cliente}
+$data = [
+    'nombre' => 'Juan Carlos',
+    'apellidos' => 'Rodríguez Pérez',
+    'genero' => 'M',
+    'dni_ruc' => '12345678',
+    'empresa' => null,
+    'email' => 'nuevo.email@email.com', // Updated email
+    'telefono' => '+51 999888777', // Updated phone
+    'direccion' => 'Nueva Av. Principal 456, Lima', // Updated address
+    'referencia' => 'Casa esquina',
+    'estado_cliente' => 'Activo'
+];
+```
+
+### Marking Client as Inactive
+
+```php
+// PUT /clientes/{cliente}
+$data = [
+    // ... all other fields remain the same
+    'estado_cliente' => 'Inactivo'
+];
+```
+
+### Searching Clients
+
+```php
+// GET /clientes?search=Rodriguez
+// Searches across client fields for matching records
+
+// GET /clientes?search=12345678
+// Can search by DNI/RUC
+
+// GET /clientes?search=Constructora
+// Can search by company name
+```
+
+## Search Functionality
+
+The `Cliente` model implements a search scope that allows filtering by:
+- Client name (nombre)
+- Last name (apellidos)
+- DNI/RUC identification
+- Company name (empresa)
+- Email address
+
+Search is case-insensitive and uses partial matching.
+
+## Error Handling
+
+### Deletion Constraints
+
+When attempting to delete a client with related records:
+
+```php
+// If client is assigned to expedientes or casos
+return back()->with('messageAlert', 
+    'Este cliente esta asignado a un expedientes.');
+```
+
+**Resolution:**
+1. First remove or reassign all expedientes associated with the client
+2. Remove or reassign all casos associated with the client
+3. Then delete the client
+
+### Validation Errors
+
+Laravel's validation will automatically return error messages for:
+- Missing required fields (nombre, apellidos, dni_ruc, estado_cliente)
+- Invalid data formats
+- Type mismatches
+
+## Field Descriptions
+
+### Required Fields
+
+<ParamField path="nombre" type="string" required>
+  **First Name** - Client's given name(s)
+</ParamField>
+
+<ParamField path="apellidos" type="string" required>
+  **Last Names** - Client's family name(s). In Spanish-speaking countries, typically includes both paternal and maternal surnames.
+</ParamField>
+
+<ParamField path="dni_ruc" type="string" required>
+  **DNI/RUC** - National identification number. DNI for individuals (8 digits), RUC for companies (11 digits starting with 10 or 20).
+</ParamField>
+
+<ParamField path="estado_cliente" type="string" required>
+  **Client Status** - Current status of the client. Common values:
+  - `Activo` - Active client
+  - `Inactivo` - Inactive client
+  - `Suspendido` - Suspended client
+</ParamField>
+
+### Optional Fields
+
+<ParamField path="genero" type="string">
+  **Gender** - Client's gender. Common values: `M` (Masculino), `F` (Femenino), `Otro`
+</ParamField>
+
+<ParamField path="empresa" type="string">
+  **Company** - Company or organization name if the client represents a legal entity
+</ParamField>
+
+<ParamField path="email" type="string">
+  **Email** - Client's email address for communications
+</ParamField>
+
+<ParamField path="telefono" type="string">
+  **Phone** - Contact phone number. Can include country code (e.g., +51 for Peru)
+</ParamField>
+
+<ParamField path="direccion" type="string">
+  **Address** - Physical address of the client
+</ParamField>
+
+<ParamField path="referencia" type="string">
+  **Reference** - Additional location details or landmarks to help find the address
+</ParamField>
+
+## Relationships
+
+### Client to Expedientes
+
+Clients can have multiple expedientes (conciliation case files). The relationship is displayed in the `show()` method.
+
+```php
+// Access client's expedientes
+$cliente->expedientes; // Returns collection of related expedientes
+```
+
+### Client to Casos
+
+Clients can have multiple casos (legal cases).
+
+```php
+// Access client's casos
+$cliente->casos; // Returns collection of related casos
+```
+
+## Related Controllers
+
+- **CasosController** - Manages legal cases that reference clients
+- **ExpedienteController** - Manages expedientes that reference clients
+
+## Related Models
+
+- **Cliente** - Main client model at `/home/daytona/workspace/source/app/Models/Cliente.php`
+- **Expedientes** - Expediente model for conciliation cases
+- **Casos** - Case model for legal cases
+
+## Best Practices
+
+1. **Always validate DNI/RUC format** - Ensure proper format for identification numbers
+2. **Check for duplicates** - Before creating, search for existing clients with same DNI/RUC
+3. **Maintain client status** - Update `estado_cliente` when client relationship changes
+4. **Clean up relationships** - Before deleting a client, ensure all cases and expedientes are reassigned
+5. **Use search functionality** - Leverage the search feature to avoid duplicate client entries

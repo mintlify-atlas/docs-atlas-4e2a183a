@@ -1,0 +1,563 @@
+---
+title: "Authentication Routes"
+description: "Laravel Breeze authentication routes including login, registration, password reset, and email verification"
+---
+
+## Overview
+
+The authentication system is built using Laravel Breeze and provides a complete authentication scaffold including login, password reset, email verification, and session management.
+
+<Note>
+Registration routes are currently disabled in this application. New users must be created through the admin panel.
+</Note>
+
+---
+
+## Guest Routes
+
+These routes are only accessible to unauthenticated users. Authenticated users will be redirected away from these routes.
+
+**Middleware:** `guest`
+
+### Login Routes
+
+<Accordion title="Login Routes">
+
+#### Display Login Form
+
+```php
+Route::get('login', [AuthenticatedSessionController::class, 'create'])
+    ->name('login');
+```
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/login` | `login` | `AuthenticatedSessionController@create` | Display the login form |
+
+**Response:** Returns the login view with email and password fields.
+
+---
+
+#### Process Login
+
+```php
+Route::post('login', [AuthenticatedSessionController::class, 'store']);
+```
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| POST | `/login` | - | `AuthenticatedSessionController@store` | Authenticate user and create session |
+
+**Request Parameters:**
+- `email` (string, required) - User's email address
+- `password` (string, required) - User's password
+- `remember` (boolean, optional) - Remember me checkbox
+
+**Response:**
+- Success: Redirect to intended page or dashboard
+- Failure: Redirect back with validation errors
+
+</Accordion>
+
+---
+
+### Registration Routes (Disabled)
+
+<Warning>
+Registration routes are currently commented out. Users must be created by administrators through the admin panel.
+</Warning>
+
+```php
+// Route::get('register', [RegisteredUserController::class, 'create'])
+//     ->name('register');
+
+// Route::post('register', [RegisteredUserController::class, 'store']);
+```
+
+If you need to enable registration, uncomment these routes in `routes/auth.php`.
+
+---
+
+### Password Reset Routes
+
+<Accordion title="Password Reset Routes">
+
+#### Request Password Reset Link (Disabled)
+
+```php
+// Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
+//     ->name('password.request');
+
+// Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
+//     ->name('password.email');
+```
+
+<Warning>
+Password reset request routes are currently commented out. Contact your administrator for password resets.
+</Warning>
+
+---
+
+#### Reset Password Form
+
+```php
+Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
+    ->name('password.reset');
+```
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/reset-password/{token}` | `password.reset` | `NewPasswordController@create` | Display password reset form |
+
+**URL Parameters:**
+- `token` (string) - Password reset token from email
+
+**Query Parameters:**
+- `email` (string) - User's email address
+
+---
+
+#### Process Password Reset
+
+```php
+Route::post('reset-password', [NewPasswordController::class, 'store'])
+    ->name('password.store');
+```
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| POST | `/reset-password` | `password.store` | `NewPasswordController@store` | Reset user password |
+
+**Request Parameters:**
+- `token` (string, required) - Password reset token
+- `email` (string, required) - User's email address
+- `password` (string, required) - New password
+- `password_confirmation` (string, required) - Password confirmation
+
+**Response:**
+- Success: Redirect to login with success message
+- Failure: Redirect back with validation errors
+
+</Accordion>
+
+---
+
+## Authenticated Routes
+
+These routes require authentication and are only accessible to logged-in users.
+
+**Middleware:** `auth`
+
+### Email Verification Routes
+
+<Accordion title="Email Verification Routes">
+
+#### Email Verification Notice
+
+```php
+Route::get('verify-email', [EmailVerificationPromptController::class, '__invoke'])
+    ->name('verification.notice');
+```
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/verify-email` | `verification.notice` | `EmailVerificationPromptController@__invoke` | Display email verification notice |
+
+**Purpose:** Shows a notice to users who have not yet verified their email address.
+
+---
+
+#### Verify Email
+
+```php
+Route::get('verify-email/{id}/{hash}', [VerifyEmailController::class, '__invoke'])
+    ->middleware(['signed', 'throttle:6,1'])
+    ->name('verification.verify');
+```
+
+| Method | URI | Route Name | Controller | Middleware | Description |
+|--------|-----|------------|------------|------------|-------------|
+| GET | `/verify-email/{id}/{hash}` | `verification.verify` | `VerifyEmailController@__invoke` | `signed`, `throttle:6,1` | Verify user's email address |
+
+**URL Parameters:**
+- `id` (integer) - User ID
+- `hash` (string) - Verification hash
+
+**Additional Middleware:**
+- `signed` - Ensures the URL has a valid signature
+- `throttle:6,1` - Limits to 6 attempts per minute
+
+**Response:**
+- Success: Redirect to dashboard
+- Failure: Redirect to verification notice
+
+---
+
+#### Resend Verification Email
+
+```php
+Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+    ->middleware('throttle:6,1')
+    ->name('verification.send');
+```
+
+| Method | URI | Route Name | Controller | Middleware | Description |
+|--------|-----|------------|------------|------------|-------------|
+| POST | `/email/verification-notification` | `verification.send` | `EmailVerificationNotificationController@store` | `throttle:6,1` | Resend verification email |
+
+**Additional Middleware:**
+- `throttle:6,1` - Limits to 6 attempts per minute
+
+**Response:**
+- Success: Redirect back with status message
+- Already verified: Redirect to dashboard
+
+</Accordion>
+
+---
+
+### Password Confirmation Routes
+
+<Accordion title="Password Confirmation Routes">
+
+#### Show Password Confirmation Form
+
+```php
+Route::get('confirm-password', [ConfirmablePasswordController::class, 'show'])
+    ->name('password.confirm');
+```
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| GET | `/confirm-password` | `password.confirm` | `ConfirmablePasswordController@show` | Display password confirmation form |
+
+**Purpose:** Used before sensitive operations to confirm the user's identity.
+
+---
+
+#### Process Password Confirmation
+
+```php
+Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
+```
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| POST | `/confirm-password` | - | `ConfirmablePasswordController@store` | Confirm user's password |
+
+**Request Parameters:**
+- `password` (string, required) - User's current password
+
+**Response:**
+- Success: Redirect to intended page
+- Failure: Redirect back with validation errors
+
+</Accordion>
+
+---
+
+### Update Password Route
+
+<Accordion title="Update Password Route">
+
+```php
+Route::put('password', [PasswordController::class, 'update'])->name('password.update');
+```
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| PUT | `/password` | `password.update` | `PasswordController@update` | Update user's password |
+
+**Request Parameters:**
+- `current_password` (string, required) - User's current password
+- `password` (string, required) - New password
+- `password_confirmation` (string, required) - Password confirmation
+
+**Response:**
+- Success: Redirect back with success message
+- Failure: Redirect back with validation errors
+
+</Accordion>
+
+---
+
+### Logout Route
+
+<Accordion title="Logout Route">
+
+```php
+Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
+    ->name('logout');
+```
+
+| Method | URI | Route Name | Controller | Description |
+|--------|-----|------------|------------|-------------|
+| POST | `/logout` | `logout` | `AuthenticatedSessionController@destroy` | Log user out and destroy session |
+
+**Response:** Redirect to login page
+
+**Security Note:** Logout is a POST request to prevent CSRF attacks.
+
+</Accordion>
+
+---
+
+## Authentication Flow
+
+<Steps>
+
+<Step title="User Login">
+User submits email and password via POST to `/login`. Laravel authenticates credentials and creates a session.
+</Step>
+
+<Step title="Email Verification">
+If email is not verified, user is redirected to `/verify-email` notice. User must click the verification link sent to their email.
+</Step>
+
+<Step title="Access Protected Routes">
+Authenticated and verified users can access routes protected by `auth` and `verified` middleware.
+</Step>
+
+<Step title="Session Management">
+Laravel maintains the user session. Session expires after inactivity or when user logs out.
+</Step>
+
+</Steps>
+
+---
+
+## Middleware Details
+
+### Guest Middleware
+
+```php
+Route::middleware('guest')->group(function () {
+    // Login, registration, password reset routes
+});
+```
+
+The `guest` middleware:
+- Allows only unauthenticated users
+- Redirects authenticated users to the dashboard
+- Applied to login and registration routes
+
+### Auth Middleware
+
+```php
+Route::middleware('auth')->group(function () {
+    // Email verification, password management, logout routes
+});
+```
+
+The `auth` middleware:
+- Requires user authentication
+- Redirects unauthenticated users to login page
+- Applied to all protected routes
+
+### Signed Middleware
+
+Used on email verification routes to ensure URLs have valid signatures:
+
+```php
+->middleware(['signed', 'throttle:6,1'])
+```
+
+### Throttle Middleware
+
+Rate limits requests to prevent abuse:
+
+```php
+->middleware('throttle:6,1')  // 6 attempts per 1 minute
+```
+
+---
+
+## Session Configuration
+
+Laravel Breeze uses session-based authentication:
+
+- **Driver:** Configured in `config/session.php`
+- **Lifetime:** Default 120 minutes
+- **Remember Me:** Extends session to 2 weeks
+- **CSRF Protection:** All POST routes require CSRF token
+
+<Tip>
+Always include the `@csrf` directive in your forms to prevent CSRF attacks:
+
+```blade
+<form method="POST" action="{{ route('login') }}">
+    @csrf
+    <!-- form fields -->
+</form>
+```
+</Tip>
+
+---
+
+## Common Authentication Examples
+
+### Login Form Example
+
+```blade
+<form method="POST" action="{{ route('login') }}">
+    @csrf
+    
+    <input type="email" name="email" value="{{ old('email') }}" required>
+    @error('email')
+        <span>{{ $message }}</span>
+    @enderror
+    
+    <input type="password" name="password" required>
+    @error('password')
+        <span>{{ $message }}</span>
+    @enderror
+    
+    <input type="checkbox" name="remember">
+    
+    <button type="submit">Log in</button>
+</form>
+```
+
+### Logout Form Example
+
+```blade
+<form method="POST" action="{{ route('logout') }}">
+    @csrf
+    <button type="submit">Log Out</button>
+</form>
+```
+
+### Checking Authentication in Controllers
+
+```php
+use Illuminate\Support\Facades\Auth;
+
+// Check if user is authenticated
+if (Auth::check()) {
+    // User is authenticated
+}
+
+// Get authenticated user
+$user = Auth::user();
+
+// Get user ID
+$userId = Auth::id();
+```
+
+### Protecting Routes in Blade Templates
+
+```blade
+@auth
+    <!-- Shown only to authenticated users -->
+@endauth
+
+@guest
+    <!-- Shown only to guests -->
+@endguest
+```
+
+---
+
+## Security Best Practices
+
+<CardGroup cols={2}>
+
+<Card title="CSRF Protection" icon="shield">
+All POST, PUT, PATCH, and DELETE requests must include a CSRF token using the `@csrf` directive.
+</Card>
+
+<Card title="Password Hashing" icon="key">
+Passwords are automatically hashed using bcrypt. Never store plain text passwords.
+</Card>
+
+<Card title="Rate Limiting" icon="gauge">
+Sensitive routes like email verification and password reset are rate limited to prevent abuse.
+</Card>
+
+<Card title="Signed URLs" icon="signature">
+Email verification links use signed URLs to prevent tampering.
+</Card>
+
+</CardGroup>
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+
+<Accordion title="User cannot log in">
+
+**Common causes:**
+- Incorrect credentials
+- Email not verified (check `verified` middleware requirement)
+- Account disabled or deleted
+- Session configuration issues
+
+**Solution:** Check user status in admin panel and verify email verification status.
+
+</Accordion>
+
+<Accordion title="Email verification not working">
+
+**Common causes:**
+- Email not configured properly in `.env`
+- Mail queue not running
+- Spam folder
+- Signed URL expired
+
+**Solution:**
+1. Check mail configuration in `.env`
+2. Run `php artisan queue:work` if using queue
+3. Manually verify user in database if needed
+
+</Accordion>
+
+<Accordion title="Session expires too quickly">
+
+**Solution:**
+1. Increase session lifetime in `config/session.php`
+2. Ensure user checks "Remember Me" during login
+3. Check if server time is synchronized
+
+</Accordion>
+
+<Accordion title="CSRF token mismatch">
+
+**Common causes:**
+- Missing `@csrf` directive in form
+- Session expired
+- Multiple browser tabs
+
+**Solution:**
+1. Add `@csrf` to all forms
+2. Increase session lifetime
+3. Clear browser cookies and cache
+
+</Accordion>
+
+</AccordionGroup>
+
+---
+
+## Related Documentation
+
+<CardGroup cols={2}>
+
+<Card title="Web Routes" icon="route" href="/api/routes/web-routes">
+Application routes with role-based access control
+</Card>
+
+<Card title="User Model" icon="user" href="/api/models/user">
+User model documentation and relationships
+</Card>
+
+<Card title="Middleware" icon="filter" href="/api/middleware">
+Middleware documentation and custom middleware
+</Card>
+
+<Card title="Controllers" icon="code" href="/api/controllers/auth-controllers">
+Authentication controller documentation
+</Card>
+
+</CardGroup>

@@ -1,0 +1,528 @@
+---
+title: 'Scheduling Activities'
+description: 'Complete guide for creating and managing general activities, case activities, and expediente activities with calendar integration'
+icon: 'calendar-days'
+---
+
+## Overview
+
+The Sistema de Abogados includes a comprehensive activity scheduling system with calendar integration. You can create three types of activities:
+
+- **General Activities** (Actividad): Standalone activities not linked to specific cases or expedientes
+- **Case Activities** (ActividadCaso): Activities associated with specific legal cases
+- **Expediente Activities** (ActividadConciliacion): Activities related to conciliation expedientes
+
+All activities are displayed in an integrated calendar view using FullCalendar, with color-coding to distinguish between activity types.
+
+## Activity Types and Color Coding
+
+The calendar uses visual color coding to differentiate activity types:
+
+| Activity Type | Color | Text Color | Access Roles |
+|--------------|-------|------------|-------------|
+| General Activities | Red (rgb(239, 68, 68)) | Black | All authenticated users |
+| Case Activities | Green (rgb(34, 197, 94)) | Black | encargado, admin, abogado |
+| Expediente Activities | Blue (rgb(59, 130, 246)) | Black | encargado, admin, asistente |
+
+## Creating General Activities
+
+General activities are for tasks not tied to specific cases or expedientes (e.g., office meetings, deadlines, reminders).
+
+<Steps>
+  <Step title="Navigate to Activities">
+    Go to the activities module at `/agenda/actividad`.
+  </Step>
+
+  <Step title="Click Create New Activity">
+    Click "Create" or "Nueva Actividad" to open the creation form.
+  </Step>
+
+  <Step title="Enter Required Fields">
+    Complete the mandatory information:
+
+    - **Title** (`titulo`): Brief description of the activity
+    - **Date** (`fecha`): Date of the activity (format: YYYY-MM-DD)
+    - **Time** (`hora`): Time of the activity (format: HH:MM)
+  </Step>
+
+  <Step title="Add Optional Details">
+    Optionally provide:
+
+    - **Address** (`direccion`): Physical location or meeting address
+    - **Description** (`descripcion`): Detailed notes about the activity
+  </Step>
+
+  <Step title="Save Activity">
+    Click "Save" to create the activity. Confirmation: "Actividad registrada correctamente."
+  </Step>
+</Steps>
+
+### General Activity Validation
+
+```php
+'titulo' => 'required',
+'direccion' => 'nullable',
+'descripcion' => 'nullable',
+'fecha' => 'required',
+'hora' => 'required'
+```
+
+<Tip>
+  Use descriptive titles that clearly indicate the purpose of the activity for easy identification in the calendar.
+</Tip>
+
+## Creating Case Activities
+
+Case activities link directly to specific legal cases, allowing you to track hearings, client meetings, and case-related deadlines.
+
+<Steps>
+  <Step title="Navigate to Case Activities">
+    Go to `/agenda/actividadCaso` to access case activities.
+  </Step>
+
+  <Step title="Start New Case Activity">
+    Click "Create" or "Nueva Actividad" to open the form.
+  </Step>
+
+  <Step title="Fill Required Information">
+    Complete all required fields:
+
+    - **Title** (`titulo`): Activity description (e.g., "Court Hearing", "Client Meeting")
+    - **Date** (`fecha`): Activity date
+    - **Time** (`hora`): Activity time
+    - **Case** (`id_caso`): Select the case this activity belongs to
+  </Step>
+
+  <Step title="Add Optional Details">
+    Provide additional information:
+
+    - **Address** (`direccion`): Location (courthouse, office, etc.)
+    - **Description** (`descripcion`): Specific details, preparation notes, or objectives
+  </Step>
+
+  <Step title="Save Case Activity">
+    Submit the form. Success message: "Actividad registrada correctamente."
+  </Step>
+</Steps>
+
+### Case Activity Validation
+
+```php
+'titulo' => 'required',
+'direccion' => 'nullable',
+'descripcion' => 'nullable',
+'fecha' => 'required',
+'hora' => 'required',
+'id_caso' => 'required'
+```
+
+<Note>
+  Case activities require `encargado`, `admin`, or `abogado` role permissions.
+</Note>
+
+### Calendar Display for Case Activities
+
+Case activities appear on the calendar with:
+- **Title format**: "\{Activity Title\} del expediente \{Case Number\}"
+- **Color**: Green
+- **Example**: "Court Hearing del expediente CASE-2026-001"
+
+## Creating Expediente Activities
+
+Expediente activities track conciliation meetings, mediation sessions, and other events related to conciliation files.
+
+<Steps>
+  <Step title="Navigate to Expediente Activities">
+    Access expediente activities at `/agenda/actividadConciliacion`.
+  </Step>
+
+  <Step title="Create New Activity">
+    Click "Create" or "Nueva Actividad de Conciliación".
+  </Step>
+
+  <Step title="Complete Required Fields">
+    Enter all mandatory information:
+
+    - **Title** (`titulo`): Activity name (e.g., "Initial Mediation Session", "Settlement Meeting")
+    - **Date** (`fecha`): Date of the conciliation activity
+    - **Time** (`hora`): Scheduled time
+    - **Expediente** (`id_expediente`): Select the expediente this activity belongs to
+  </Step>
+
+  <Step title="Add Location and Notes">
+    Optionally add:
+
+    - **Address** (`direccion`): Mediation center or meeting location
+    - **Description** (`descripcion`): Agenda, parties involved, or preparation requirements
+  </Step>
+
+  <Step title="Save Activity">
+    Submit to create. Confirmation: "Actividad registrada correctamente."
+  </Step>
+</Steps>
+
+### Expediente Activity Validation
+
+```php
+'titulo' => 'required',
+'direccion' => 'nullable',
+'descripcion' => 'nullable',
+'fecha' => 'required',
+'hora' => 'required',
+'id_expediente' => 'required'
+```
+
+<Note>
+  Expediente activities require `encargado`, `admin`, or `asistente` role permissions.
+</Note>
+
+### Calendar Display for Expediente Activities
+
+Expediente activities appear on the calendar with:
+- **Title format**: "\{Activity Title\} del expediente \{Expediente Number\}"
+- **Color**: Blue
+- **Example**: "Mediation Session del expediente EXP-2026-042"
+
+## Calendar View and Navigation
+
+The integrated calendar provides a comprehensive view of all scheduled activities using FullCalendar.
+
+<Steps>
+  <Step title="Access Calendar">
+    Navigate to the calendar view at `/agenda/calendar`.
+  </Step>
+
+  <Step title="View All Activities">
+    The calendar displays all three types of activities with color coding:
+    - Red: General activities
+    - Green: Case activities
+    - Blue: Expediente activities
+  </Step>
+
+  <Step title="Navigate Time Periods">
+    Use the calendar navigation:
+    - **Month View**: See all activities for the current month
+    - **Week View**: Detailed weekly schedule
+    - **Day View**: Focus on a single day's activities
+    - **Navigation Buttons**: Move forward/backward through time periods
+  </Step>
+
+  <Step title="Click on Activities">
+    Click any activity on the calendar to view details or take action.
+  </Step>
+</Steps>
+
+### Calendar Event Format
+
+Events are displayed with the following structure:
+
+```javascript
+{
+  title: 'Activity Title [+ del expediente CASE/EXP-NUMBER]',
+  start: 'YYYY-MM-DD HH:MM',
+  end: 'YYYY-MM-DD HH:MM',
+  color: 'rgb(r, g, b)',
+  textColor: 'black'
+}
+```
+
+<Tip>
+  Use the calendar's month view for high-level planning and day view for detailed scheduling.
+</Tip>
+
+## Editing and Updating Activities
+
+All three activity types can be edited after creation.
+
+### Editing General Activities
+
+<Steps>
+  <Step title="Navigate to Activities List">
+    Go to `/agenda/actividad` to see all general activities.
+  </Step>
+
+  <Step title="Select Activity to Edit">
+    Click the "Edit" button for the activity you want to modify.
+  </Step>
+
+  <Step title="Update Information">
+    Modify any field (title, date, time, address, description).
+  </Step>
+
+  <Step title="Save Changes">
+    Submit the form. Confirmation: "Actividad actualizada correctamente."
+  </Step>
+</Steps>
+
+### Editing Case Activities
+
+<Steps>
+  <Step title="Go to Case Activities">
+    Navigate to `/agenda/actividadCaso`.
+  </Step>
+
+  <Step title="Edit Activity">
+    Click "Edit" for the case activity you want to change.
+  </Step>
+
+  <Step title="Modify Details">
+    Update activity information. Note: The associated case (`id_caso`) becomes nullable during updates.
+  </Step>
+
+  <Step title="Save">
+    Submit changes. Message: "Actividad actualizada correctamente."
+  </Step>
+</Steps>
+
+### Editing Expediente Activities
+
+<Steps>
+  <Step title="Access Expediente Activities">
+    Go to `/agenda/actividadConciliacion`.
+  </Step>
+
+  <Step title="Select Activity">
+    Click "Edit" for the activity to modify.
+  </Step>
+
+  <Step title="Update Fields">
+    Change any activity details as needed.
+  </Step>
+
+  <Step title="Submit Changes">
+    Save updates. Confirmation: "Actividad actualizada correctamente."
+  </Step>
+</Steps>
+
+<Warning>
+  When editing case or expediente activities, be careful not to accidentally unlink them from their associated case or expediente.
+</Warning>
+
+## Deleting Activities
+
+Activities can be permanently deleted if no longer needed.
+
+### Deleting General Activities
+
+<Steps>
+  <Step title="Find Activity">
+    Locate the activity in the list at `/agenda/actividad`.
+  </Step>
+
+  <Step title="Click Delete">
+    Click the delete or trash icon.
+  </Step>
+
+  <Step title="Confirm Deletion">
+    Confirm the action. Message: "Actividad eliminada correctamente."
+  </Step>
+</Steps>
+
+### Deleting Case Activities
+
+<Steps>
+  <Step title="Locate Case Activity">
+    Find the activity at `/agenda/actividadCaso`.
+  </Step>
+
+  <Step title="Delete Activity">
+    Click delete and confirm.
+  </Step>
+
+  <Step title="Confirmation">
+    Success message: "Actividad eliminada correctamente."
+  </Step>
+</Steps>
+
+### Deleting Expediente Activities
+
+<Steps>
+  <Step title="Find Expediente Activity">
+    Navigate to `/agenda/actividadConciliacion`.
+  </Step>
+
+  <Step title="Remove Activity">
+    Click delete and confirm the action.
+  </Step>
+
+  <Step title="Deleted">
+    Confirmation: "Actividad eliminada correctamente."
+  </Step>
+</Steps>
+
+<Note>
+  Deleting an activity does not affect the associated case or expediente - only the activity record is removed.
+</Note>
+
+## Searching Activities
+
+Quickly find activities using the search functionality available for all three activity types.
+
+<Steps>
+  <Step title="Use Search Bar">
+    On any activity list page, use the search input field.
+  </Step>
+
+  <Step title="Enter Search Terms">
+    Search by:
+    - Activity title
+    - Description
+    - Date
+  </Step>
+
+  <Step title="View Results">
+    Results display with pagination (5 activities per page).
+  </Step>
+</Steps>
+
+## Activity Reminders and Notifications
+
+While the system currently tracks activities in the calendar, consider these best practices for staying on top of scheduled events:
+
+### Manual Reminder Strategies
+
+- **Daily Calendar Review**: Check the calendar daily for upcoming activities
+- **Weekly Planning**: Review the week ahead every Monday
+- **Use Descriptions**: Add preparation tasks and requirements in the description field
+- **Export Calendar**: Use the calendar export functionality (if available) to sync with external calendar apps
+
+### Preparation Checklist
+
+For important activities, include in the description:
+- Required documents
+- Attendee list
+- Preparation tasks
+- Special requirements
+- Follow-up actions
+
+<Tip>
+  Create activities with adequate lead time and use descriptive titles to make them easily recognizable in the calendar.
+</Tip>
+
+## Best Practices
+
+### For All Activity Types
+
+- **Descriptive Titles**: Use clear, specific titles ("Client Meeting - Contract Review" instead of "Meeting")
+- **Accurate Timing**: Double-check dates and times before saving
+- **Complete Addresses**: Include full location details for in-person meetings
+- **Detailed Descriptions**: Add context, preparation needs, and objectives
+- **Regular Updates**: Update or delete activities that are cancelled or rescheduled
+
+### For Case Activities
+
+- **Link to Correct Case**: Verify you've selected the right case before saving
+- **Court Deadlines**: Create activities for all critical court dates
+- **Client Communications**: Schedule follow-up meetings immediately after court appearances
+- **Document Preparation**: Create activities for document preparation well in advance of deadlines
+
+### For Expediente Activities
+
+- **Mediation Preparation**: Create preparation activities before main sessions
+- **Party Coordination**: Include contact information in descriptions
+- **Session Duration**: Consider creating end times that reflect typical session length
+- **Follow-up Sessions**: Schedule follow-up meetings immediately after initial sessions
+
+### Calendar Management
+
+- **Color Awareness**: Use color coding to quickly identify activity types
+- **Avoid Conflicts**: Check the calendar before scheduling new activities
+- **Buffer Time**: Allow travel time between activities at different locations
+- **Regular Review**: Weekly calendar reviews help prevent scheduling conflicts
+
+## Workflow Examples
+
+### Scheduling a Court Hearing
+
+<Steps>
+  <Step title="Create Case Activity">
+    Create a case activity for the hearing date.
+  </Step>
+
+  <Step title="Add Preparation Activity">
+    Create another activity 2-3 days before for document preparation.
+  </Step>
+
+  <Step title="Include Details">
+    Add courtroom number, judge name, and required documents in description.
+  </Step>
+
+  <Step title="Set Reminder">
+    Create a general activity the day before as a final reminder.
+  </Step>
+</Steps>
+
+### Planning a Conciliation Session
+
+<Steps>
+  <Step title="Create Expediente Activity">
+    Schedule the mediation session with the expediente.
+  </Step>
+
+  <Step title="Notify Parties">
+    Use the description to note which invitados have confirmed attendance.
+  </Step>
+
+  <Step title="Prepare Materials">
+    Create a preparation activity to review documents and prepare the mediation room.
+  </Step>
+
+  <Step title="Schedule Follow-up">
+    Immediately create a follow-up activity for the next session if needed.
+  </Step>
+</Steps>
+
+## Technical Reference
+
+### General Activities
+
+**Controller**: `ActividadController.php`
+
+**Routes**:
+- List activities: `GET /agenda/actividad`
+- Create activity: `POST /agenda/actividad`
+- Edit form: `GET /agenda/actividad/{id}/edit`
+- Update activity: `PUT /agenda/actividad/{id}`
+- Delete activity: `DELETE /agenda/actividad/{id}`
+
+**Model**: `Actividad`
+
+### Case Activities
+
+**Controller**: `ActividadCasoController.php`
+
+**Routes**:
+- List activities: `GET /agenda/actividadCaso`
+- Create activity: `POST /agenda/actividadCaso`
+- Edit form: `GET /agenda/actividadCaso/{id}/edit`
+- Update activity: `PUT /agenda/actividadCaso/{id}`
+- Delete activity: `DELETE /agenda/actividadCaso/{id}`
+
+**Model**: `ActividadCaso`
+
+### Expediente Activities
+
+**Controller**: `ActividadConciliacionController.php`
+
+**Routes**:
+- List activities: `GET /agenda/actividadConciliacion`
+- Create activity: `POST /agenda/actividadConciliacion`
+- Edit form: `GET /agenda/actividadConciliacion/{id}/edit`
+- Update activity: `PUT /agenda/actividadConciliacion/{id}`
+- Delete activity: `DELETE /agenda/actividadConciliacion/{id}`
+
+**Model**: `ActividadConciliacion`
+
+### Calendar View
+
+**Controller**: `CalendarController.php`
+
+**Route**: `GET /agenda/calendar`
+
+**Library**: FullCalendar (JavaScript calendar library)
+
+## Related Resources
+
+- [Creating Cases](/guides/creating-cases)
+- [Managing Expedientes](/guides/managing-expedientes)
+- [Document Uploads](/guides/document-uploads)

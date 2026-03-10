@@ -1,0 +1,233 @@
+---
+title: 'Creating and Managing Cases'
+description: 'Step-by-step guide for creating legal cases, assigning process types, and managing opposing parties'
+icon: 'briefcase'
+---
+
+## Overview
+
+Cases (Casos) are the core legal matters handled by your firm. Each case is associated with a client and can have multiple process types and opposing parties. This guide walks you through the complete case management workflow.
+
+## Prerequisites
+
+<Warning>
+  Before creating a case, you must have at least one client registered in the system. Cases cannot be created without an associated client.
+</Warning>
+
+<Note>
+  Required permissions: `encargado`, `admin`, or `abogado` role
+</Note>
+
+## Creating a New Case
+
+<Steps>
+  <Step title="Navigate to Cases">
+    Access the cases module from the main navigation menu by going to `/caso/caso`.
+  </Step>
+
+  <Step title="Click Create New Case">
+    Click the "Create" or "Nuevo Caso" button to access the case creation form.
+  </Step>
+
+  <Step title="Fill Required Information">
+    Complete the following required fields:
+
+    - **Case Number** (`n_caso`): Unique identifier for the case
+    - **Start Date** (`fecha_inicio`): Date when the case begins
+    - **Status** (`estado`): Current state of the case (e.g., Active, Closed, In Progress)
+    - **Client** (`id_cliente`): Select the client associated with this case
+  </Step>
+
+  <Step title="Add Optional Details">
+    You can also provide:
+
+    - **End Date** (`fecha_final`): Date when the case concluded (leave empty for ongoing cases)
+    - **Description** (`descripcion`): Detailed information about the case
+  </Step>
+
+  <Step title="Submit the Form">
+    Click "Save" or "Guardar" to create the case. You'll see a confirmation message: "Caso registrado correctamente."
+  </Step>
+</Steps>
+
+## Validation Requirements
+
+The system enforces the following validation rules:
+
+```php
+'n_caso' => 'required',
+'fecha_inicio' => 'required',
+'fecha_final' => 'nullable',
+'descripcion' => 'nullable',
+'estado' => 'required',
+'id_cliente' => 'required'
+```
+
+<Tip>
+  Case numbers should follow your firm's naming convention for consistency and easy reference.
+</Tip>
+
+## Case States and Status Management
+
+Cases can have different states to track their progress:
+
+- **Active**: Currently being worked on
+- **Pending**: Awaiting action or information
+- **Closed**: Case has been concluded
+- **Archived**: Historical cases no longer active
+
+### Updating Case Status
+
+<Steps>
+  <Step title="Navigate to Case Details">
+    Click on a case from the list to view its details at `/caso/caso/{id}`.
+  </Step>
+
+  <Step title="Edit Case Information">
+    Click the "Edit" button to modify case details.
+  </Step>
+
+  <Step title="Update Status">
+    Change the `estado` field to reflect the current status.
+  </Step>
+
+  <Step title="Save Changes">
+    Submit the form to update the case. You'll see: "Caso Actualisado correctamente."
+  </Step>
+</Steps>
+
+## Assigning Process Types
+
+Each case can have one or more process types (TipoProceso) assigned to categorize the legal proceedings.
+
+<Steps>
+  <Step title="Open Case Details">
+    Navigate to the case detail page at `/caso/caso/{id}`.
+  </Step>
+
+  <Step title="Access Process Type Section">
+    Scroll to the "Process Types" or "Tipos de Proceso" section.
+  </Step>
+
+  <Step title="Select Process Type">
+    Choose a process type from the available options (e.g., Civil, Criminal, Family Law).
+  </Step>
+
+  <Step title="Assign to Case">
+    Click "Assign" or "Asignar Proceso" to link the process type to the case. You'll see: "Proceso asignado."
+  </Step>
+</Steps>
+
+### Removing Process Types
+
+If a process type was assigned incorrectly:
+
+1. Locate the assigned process type in the case details
+2. Click the "Remove" or delete button
+3. Confirm the removal - you'll see: "Proceso Removido."
+
+## Adding Opposing Parties
+
+Opposing parties (Parte Contraria) represent the other side in a legal case.
+
+<Steps>
+  <Step title="Open Case Details">
+    Go to the case detail page.
+  </Step>
+
+  <Step title="Navigate to Opposing Parties Section">
+    Find the "Opposing Parties" or "Partes Contrarias" section.
+  </Step>
+
+  <Step title="Select Opposing Party">
+    Choose from existing opposing parties or create a new one.
+  </Step>
+
+  <Step title="Assign to Case">
+    Click "Assign" to link the opposing party to the case. Confirmation: "Parte contraria asignada."
+  </Step>
+</Steps>
+
+### Removing Opposing Parties
+
+1. Find the opposing party in the case details
+2. Click the remove button
+3. Confirm - you'll see: "Parte contraria Removido."
+
+## Searching and Filtering Cases
+
+The system provides search functionality to quickly find cases:
+
+<Steps>
+  <Step title="Use the Search Bar">
+    On the cases index page, use the search input to filter cases.
+  </Step>
+
+  <Step title="Search by Case Number or Status">
+    The search function looks through:
+    - Case number (`n_caso`)
+    - Case status (`estado`)
+  </Step>
+
+  <Step title="View Results">
+    The list will update to show only matching cases with pagination (5 cases per page).
+  </Step>
+</Steps>
+
+<Tip>
+  Use descriptive case numbers and keep status values consistent for easier searching.
+</Tip>
+
+## Deleting Cases
+
+<Warning>
+  Cases can only be deleted if they have no associated resources (documents, activities, etc.). Remove all connections before attempting to delete a case.
+</Warning>
+
+<Steps>
+  <Step title="Locate the Case">
+    Find the case you want to delete from the cases list.
+  </Step>
+
+  <Step title="Click Delete">
+    Click the delete or trash icon for the case.
+  </Step>
+
+  <Step title="Confirm Deletion">
+    Confirm the action. If successful: "Caso eliminado correctamente."
+  </Step>
+</Steps>
+
+If the case has dependencies, you'll see an error message: "No puede eliminar! Antes elimine sus conexiones."
+
+## Best Practices
+
+- **Consistent Naming**: Use a standardized format for case numbers (e.g., YYYY-NNN or CLIENT-NNN)
+- **Regular Updates**: Keep case status current to maintain accurate records
+- **Complete Information**: Fill in description fields with relevant case details for future reference
+- **Document Everything**: Link all relevant documents and activities to cases
+- **Review Before Deletion**: Ensure all case data is archived or transferred before deletion
+
+## Related Actions
+
+After creating a case, you'll typically want to:
+
+- [Upload case documents](/guides/document-uploads)
+- [Schedule case activities](/guides/scheduling-activities)
+- View case details and history
+- Generate case reports
+
+## Technical Reference
+
+**Controller**: `CasosController.php`
+
+**Key Routes**:
+- List cases: `GET /caso/caso`
+- Create case: `POST /caso/caso`
+- View case: `GET /caso/caso/{id}`
+- Update case: `PUT /caso/caso/{id}`
+- Delete case: `DELETE /caso/caso/{id}`
+- Assign process: `POST /caso/caso/{id}/procesos`
+- Assign opposing party: `POST /caso/caso/{id}/p_contrarias`
+
+**Model**: `Casos` with relationship to `Cliente`

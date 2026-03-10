@@ -1,0 +1,240 @@
+---
+title: 'Cliente Model'
+description: 'Gestión de clientes en el sistema de abogados'
+---
+
+## Overview
+
+El modelo `Cliente` representa a los clientes del despacho de abogados. Este modelo utiliza Laravel Scout para búsqueda avanzada y gestiona toda la información personal y de contacto de los clientes.
+
+**Namespace:** `App\Models\Cliente`
+
+**Table:** `clientes`
+
+**Traits:**
+- `HasFactory` - Soporte para factories de Laravel
+- `Searchable` - Integración con Laravel Scout para búsqueda
+
+## Fillable Attributes
+
+<ParamField path="nombre" type="string" required>
+  Nombre del cliente
+</ParamField>
+
+<ParamField path="apellidos" type="string" required>
+  Apellidos del cliente
+</ParamField>
+
+<ParamField path="genero" type="string">
+  Género del cliente (masculino, femenino, otro)
+</ParamField>
+
+<ParamField path="dni_ruc" type="string" required>
+  Documento Nacional de Identidad o RUC del cliente
+</ParamField>
+
+<ParamField path="empresa" type="string">
+  Nombre de la empresa si el cliente es persona jurídica
+</ParamField>
+
+<ParamField path="email" type="string">
+  Correo electrónico del cliente
+</ParamField>
+
+<ParamField path="telefono" type="string">
+  Número de teléfono del cliente
+</ParamField>
+
+<ParamField path="direccion" type="string">
+  Dirección física del cliente
+</ParamField>
+
+<ParamField path="referencia" type="string">
+  Referencia adicional para ubicación o información del cliente
+</ParamField>
+
+<ParamField path="estado_cliente" type="string">
+  Estado actual del cliente (activo, inactivo, etc.)
+</ParamField>
+
+## Relationships
+
+### expedientes()
+
+Relación uno a muchos con expedientes de conciliación.
+
+**Type:** `HasMany`
+
+**Returns:** `Illuminate\Database\Eloquent\Relations\HasMany`
+
+```php
+public function expedientes(): HasMany
+{
+    return $this->hasMany(Expedientes::class, 'id_cliente', 'id');
+}
+```
+
+### casos()
+
+Relación uno a muchos con casos legales.
+
+**Type:** `HasMany`
+
+**Returns:** `Illuminate\Database\Eloquent\Relations\HasMany`
+
+```php
+public function casos(): HasMany
+{
+    return $this->hasMany(Casos::class, 'id_cliente', 'id');
+}
+```
+
+## Laravel Scout Configuration
+
+El modelo Cliente está configurado para búsqueda con Laravel Scout. Los siguientes campos son indexados:
+
+```php
+public function toSearchableArray()
+{
+    return [
+        'nombre' => $this->nombre,
+        'apellidos' => $this->apellidos,
+        'dni_ruc' => $this->dni_ruc,
+        'empresa' => $this->empresa,
+        'email' => $this->email,
+        'telefono' => $this->telefono,
+        'direccion' => $this->direccion,
+    ];
+}
+```
+
+## Usage Examples
+
+<CodeGroup>
+
+```php Creating a Client
+use App\Models\Cliente;
+
+$cliente = Cliente::create([
+    'nombre' => 'Juan',
+    'apellidos' => 'Pérez García',
+    'genero' => 'masculino',
+    'dni_ruc' => '12345678',
+    'email' => 'juan.perez@example.com',
+    'telefono' => '987654321',
+    'direccion' => 'Av. Principal 123',
+    'referencia' => 'Cerca del parque central',
+    'estado_cliente' => 'activo'
+]);
+```
+
+```php Searching Clients
+use App\Models\Cliente;
+
+// Búsqueda usando Laravel Scout
+$clientes = Cliente::search('Juan Pérez')->get();
+
+// Búsqueda por DNI/RUC
+$cliente = Cliente::search('12345678')->first();
+
+// Búsqueda por email
+$clientes = Cliente::search('juan.perez@example.com')->get();
+```
+
+```php Accessing Relationships
+use App\Models\Cliente;
+
+$cliente = Cliente::find(1);
+
+// Obtener todos los expedientes del cliente
+$expedientes = $cliente->expedientes;
+
+// Obtener todos los casos del cliente
+$casos = $cliente->casos;
+
+// Contar expedientes activos
+$expedientesActivos = $cliente->expedientes()
+    ->where('estado', 'activo')
+    ->count();
+```
+
+```php Updating Client Status
+use App\Models\Cliente;
+
+$cliente = Cliente::find(1);
+$cliente->update([
+    'estado_cliente' => 'inactivo'
+]);
+
+// O usando el método save
+$cliente->estado_cliente = 'activo';
+$cliente->save();
+```
+
+```php Eager Loading Relationships
+use App\Models\Cliente;
+
+// Cargar cliente con sus expedientes y casos
+$cliente = Cliente::with(['expedientes', 'casos'])->find(1);
+
+// Cargar clientes activos con conteo de casos
+$clientes = Cliente::withCount('casos')
+    ->where('estado_cliente', 'activo')
+    ->get();
+```
+
+</CodeGroup>
+
+## Complete Model Code
+
+```php /home/daytona/workspace/source/app/Models/Cliente.php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Laravel\Scout\Searchable;
+
+class Cliente extends Model
+{
+    use HasFactory, Searchable;
+    
+    protected $fillable = [
+        'nombre',
+        'apellidos',
+        'genero',
+        'dni_ruc',
+        'empresa',
+        'email',
+        'telefono',
+        'direccion',
+        'referencia',
+        'estado_cliente',
+    ];
+
+    public function toSearchableArray()
+    {
+        return [
+            'nombre' => $this->nombre,
+            'apellidos' => $this->apellidos,
+            'dni_ruc' => $this->dni_ruc,
+            'empresa' => $this->empresa,
+            'email' => $this->email,
+            'telefono' => $this->telefono,
+            'direccion' => $this->direccion,
+        ];
+    }
+
+    public function expedientes(): HasMany
+    {
+        return $this->hasMany(Expedientes::class, 'id_cliente', 'id');
+    }
+
+    public function casos(): HasMany
+    {
+        return $this->hasMany(Casos::class, 'id_cliente', 'id');
+    }
+}
+```

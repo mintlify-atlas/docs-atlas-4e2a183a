@@ -1,0 +1,351 @@
+---
+title: 'Roles and Permissions'
+description: 'Manage user roles and permissions using Spatie Laravel Permission package'
+---
+
+## Overview
+
+Sistema de Abogados implements a robust role-based access control (RBAC) system using the **Spatie Laravel Permission** package. This system allows you to control what users can access and do within the application through roles and permissions.
+
+## Spatie Laravel Permission Integration
+
+The application uses the `spatie/laravel-permission` package to manage roles and permissions. The User model includes the `HasRoles` trait, enabling role and permission assignment:
+
+```php app/Models/User.php
+use Spatie\Permission\Traits\HasRoles;
+
+class User extends Authenticatable
+{
+    use HasApiTokens, HasFactory, Notifiable, HasRoles, Searchable;
+    // ...
+}
+```
+
+## Default Roles
+
+The system defines four primary roles during database seeding:
+
+<CardGroup cols={2}>
+  <Card title="Admin" icon="shield-halved">
+    Full system access including user, role, and permission management
+  </Card>
+  <Card title="Encargado" icon="briefcase">
+    Case manager with access to conciliation and case management
+  </Card>
+  <Card title="Asistente" icon="user-tie">
+    Assistant with access to conciliation and expediente support
+  </Card>
+  <Card title="Abogado" icon="gavel">
+    Lawyer with case management and client interaction capabilities
+  </Card>
+</CardGroup>
+
+### Role Seeder
+
+Roles are created during database seeding:
+
+```php database/seeders/RoleSeeder.php
+use Spatie\Permission\Models\Role;
+
+public function run()
+{
+    Role::create(['name' => 'admin']);
+    Role::create(['name' => 'asistente']);
+    Role::create(['name' => 'abogado']);
+}
+```
+
+<Note>
+The `encargado` role may be created manually or through additional seeders not shown in the base RoleSeeder.
+</Note>
+
+## Permission Management
+
+Permissions control specific actions users can perform. The system provides a complete CRUD interface for managing permissions.
+
+### Creating Permissions
+
+Administrators can create new permissions through the PermissionController:
+
+```php app/Http/Controllers/Admin/PermissionController.php
+public function store(Request $request)
+{
+    $validated = $request->validate(['name' => ['required']]);
+    Permission::create($validated);
+
+    return to_route('admin.permissions.index')
+        ->with('message', 'Permiso creado correctamente.');
+}
+```
+
+### Assigning Permissions to Roles
+
+Permissions can be assigned to roles to control role capabilities:
+
+<Steps>
+  <Step title="Navigate to Role Management">
+    Access the role edit page at `/admin/roles/{role}/edit`
+  </Step>
+  
+  <Step title="Select Permission">
+    Choose the permission you want to assign from the available permissions list
+  </Step>
+  
+  <Step title="Assign Permission">
+    Submit the form to assign the permission to the role
+    
+    ```php app/Http/Controllers/Admin/RoleController.php
+    public function givePermission(Request $request, Role $role)
+    {
+        if($role->hasPermissionTo($request->permission)){
+            return back()->with('messageAlert', 'Permiso existente.');
+        }
+        $role->givePermissionTo($request->permission);
+        return back()->with('message', 'Permiso agregado.');
+    }
+    ```
+  </Step>
+</Steps>
+
+### Revoking Permissions from Roles
+
+To remove a permission from a role:
+
+```php app/Http/Controllers/Admin/RoleController.php
+public function revokePermission(Role $role, Permission $permission)
+{
+    if($role->hasPermissionTo($permission)){
+        $role->revokePermissionTo($permission);
+        return back()->with('messagedestroy', 'Permiso removido.');
+    }
+}
+```
+
+**Route:** `DELETE /admin/roles/{role}/permissions/{permission}`
+
+## Role Assignment
+
+### Assigning Roles to Users
+
+Administrators can assign roles to users through the UserController:
+
+<Steps>
+  <Step title="Access User Management">
+    Navigate to `/admin/users/{user}` to view the user's role management page
+  </Step>
+  
+  <Step title="Select Role">
+    Choose from available roles: admin, encargado, asistente, or abogado
+  </Step>
+  
+  <Step title="Assign Role">
+    Submit the role assignment:
+    
+    ```php app/Http/Controllers/Admin/UserController.php
+    public function assignRole(Request $request, User $user)
+    {
+        if($user->hasRole($request->role)){
+            return back()->with('messageAlert', 'Rol existente.');
+        }
+
+        $user->assignRole($request->role);
+        return back()->with('message', 'Role asignado.');
+    }
+    ```
+    
+    **Route:** `POST /admin/users/{user}/roles`
+  </Step>
+</Steps>
+
+### Removing Roles from Users
+
+To remove a role from a user:
+
+```php app/Http/Controllers/Admin/UserController.php
+public function removeRole(User $user, Role $role)
+{
+    if($user->hasRole($role)){
+        $user->removeRole($role);
+        return back()->with('messagedestroy', 'Rol Removido.');
+    }
+
+    return back()->with('messageAlert', 'Rol no existente.');
+}
+```
+
+**Route:** `DELETE /admin/users/{user}/roles/{role}`
+
+## Direct Permission Assignment
+
+In addition to role-based permissions, you can assign permissions directly to individual users.
+
+### Giving Permissions to Users
+
+```php app/Http/Controllers/Admin/UserController.php
+public function givePermission(Request $request, User $user)
+{
+    if($user->hasPermissionTo($request->permission)){
+        return back()->with('messageAlert', 'Permiso existente.');
+    }
+    $user->givePermissionTo($request->permission);
+    return back()->with('message', 'Permiso agregado.');
+}
+```
+
+**Route:** `POST /admin/users/{user}/permissions`
+
+### Revoking Permissions from Users
+
+```php app/Http/Controllers/Admin/UserController.php
+public function revokePermission(User $user, Permission $permission)
+{
+    if($user->hasPermissionTo($permission)){
+        $user->revokePermissionTo($permission);
+        return back()->with('messagedestroy', 'Permiso removido.');
+    }
+}
+```
+
+**Route:** `DELETE /admin/users/{user}/permissions/{permission}`
+
+## Middleware Protection
+
+The application uses role-based middleware to protect routes. Only users with specific roles can access protected resources.
+
+### Admin-Only Routes
+
+All role and permission management is restricted to admin users:
+
+```php routes/web.php
+Route::middleware(['auth', 'role:admin'])->name('admin.')->prefix('admin')->group(function() {
+    Route::get('/', [IndexController::class, 'index'])->name('index');
+    Route::resource('/roles', RoleController::class);
+    Route::resource('/permissions', PermissionController::class);
+    Route::resource('/users', UserController::class);
+    // Role and permission assignment routes...
+});
+```
+
+### Multi-Role Routes
+
+Many routes allow access to multiple roles using the pipe (`|`) separator:
+
+```php routes/web.php
+// Encargado, Admin, and Asistente can access conciliation
+Route::middleware(['auth', 'role:encargado|admin|asistente'])
+    ->name('conciliacion.')
+    ->prefix('conciliacion')
+    ->group(function() {
+        Route::resource('/expediente', ExpedienteController::class);
+        // ...
+    });
+
+// Encargado, Admin, and Abogado can access case management
+Route::middleware(['auth', 'role:encargado|admin|abogado'])
+    ->name('caso.')
+    ->prefix('caso')
+    ->group(function() {
+        Route::resource('/caso', CasosController::class);
+        // ...
+    });
+```
+
+## Admin Routes Reference
+
+<AccordionGroup>
+  <Accordion title="Role Management Routes">
+    - `GET /admin/roles` - List all roles
+    - `GET /admin/roles/create` - Create role form
+    - `POST /admin/roles` - Store new role
+    - `GET /admin/roles/{role}/edit` - Edit role form
+    - `PUT /admin/roles/{role}` - Update role
+    - `DELETE /admin/roles/{role}` - Delete role
+    - `POST /admin/roles/{role}/permissions` - Assign permission to role
+    - `DELETE /admin/roles/{role}/permissions/{permission}` - Revoke permission from role
+  </Accordion>
+  
+  <Accordion title="Permission Management Routes">
+    - `GET /admin/permissions` - List all permissions
+    - `GET /admin/permissions/create` - Create permission form
+    - `POST /admin/permissions` - Store new permission
+    - `GET /admin/permissions/{permission}/edit` - Edit permission form
+    - `PUT /admin/permissions/{permission}` - Update permission
+    - `DELETE /admin/permissions/{permission}` - Delete permission
+    - `POST /admin/permissions/{permission}/roles` - Assign role to permission
+    - `DELETE /admin/permissions/{permission}/roles/{role}` - Remove role from permission
+  </Accordion>
+  
+  <Accordion title="User Management Routes">
+    - `GET /admin/users` - List all users
+    - `GET /admin/users/{user}` - Show user with roles and permissions
+    - `DELETE /admin/users/{user}` - Delete user
+    - `POST /admin/users/{user}/roles` - Assign role to user
+    - `DELETE /admin/users/{user}/roles/{role}` - Remove role from user
+    - `POST /admin/users/{user}/permissions` - Give permission to user
+    - `DELETE /admin/users/{user}/permissions/{permission}` - Revoke permission from user
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<Warning>
+Admin users cannot be deleted from the system. The UserController prevents deletion of users with the admin role:
+
+```php
+if($user->hasRole('admin')){
+    return back()->with('messageAlert', 'No puedes eliminar un usuario admin.');
+}
+```
+</Warning>
+
+<CardGroup cols={2}>
+  <Card title="Use Roles for Groups" icon="users">
+    Assign permissions to roles rather than individual users for easier management
+  </Card>
+  <Card title="Principle of Least Privilege" icon="lock">
+    Only grant permissions necessary for users to perform their duties
+  </Card>
+  <Card title="Regular Audits" icon="magnifying-glass">
+    Periodically review user roles and permissions to ensure appropriateness
+  </Card>
+  <Card title="Document Custom Permissions" icon="file-lines">
+    Keep track of custom permissions created for specific business needs
+  </Card>
+</CardGroup>
+
+## Checking Permissions in Code
+
+The Spatie package provides several methods to check permissions:
+
+```php
+// Check if user has a role
+if ($user->hasRole('admin')) {
+    // User is an admin
+}
+
+// Check if user has a permission
+if ($user->hasPermissionTo('edit articles')) {
+    // User can edit articles
+}
+
+// Check if role has a permission
+if ($role->hasPermissionTo('delete users')) {
+    // Role can delete users
+}
+
+// Check multiple roles
+if ($user->hasAnyRole(['admin', 'encargado'])) {
+    // User has at least one of these roles
+}
+```
+
+## See Also
+
+<CardGroup cols={2}>
+  <Card title="User Types" icon="user-group" href="/users/user-types">
+    Learn about each user role and their specific capabilities
+  </Card>
+  <Card title="Authentication" icon="key" href="/users/authentication">
+    Understand how authentication and session management works
+  </Card>
+</CardGroup>
