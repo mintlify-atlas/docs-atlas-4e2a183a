@@ -1,0 +1,195 @@
+---
+title: Dashboard & Analytics
+description: Monitor your law firm's performance with real-time statistics and visualizations
+---
+
+# Dashboard & Analytics
+
+The Sistema de Abogados dashboard provides a comprehensive overview of your law firm's operations with real-time statistics, charts, and a calendar view of upcoming activities.
+
+## Overview
+
+Upon logging in, users are presented with the main dashboard that displays:
+
+- **Quick statistics** for clients, cases, expedientes, and users
+- **Client demographics** breakdown by gender
+- **Monthly trends** for cases and expedientes
+- **Activity calendar** showing all scheduled events
+
+<Note>
+The dashboard automatically updates statistics based on the current data in your system, providing you with an always-current view of your operations.
+</Note>
+
+## Key Metrics
+
+<CardGroup cols={2}>
+  <Card title="Total Clients" icon="users">
+    Count of all registered clients in the system
+  </Card>
+  <Card title="Active Cases" icon="gavel">
+    Total number of legal cases (Casos) being managed
+  </Card>
+  <Card title="Expedientes" icon="handshake">
+    Count of all conciliation expedientes in the system
+  </Card>
+  <Card title="System Users" icon="user-shield">
+    Number of registered users (attorneys, assistants, administrators)
+  </Card>
+</CardGroup>
+
+## Analytics Features
+
+### Client Demographics
+
+The dashboard displays client distribution by gender:
+- **Female clients count**
+- **Male clients count**
+
+This helps you understand your client base composition and track diversity metrics.
+
+### Monthly Case Trends
+
+**Chart.js** powered visualizations show:
+
+- **Expedientes created by month** - Track conciliation case volume throughout the year
+- **Legal cases (Casos) created by month** - Monitor litigation activity trends
+
+These charts display data for the current year, grouped by month, allowing you to:
+- Identify busy periods
+- Plan resource allocation
+- Track business growth
+- Compare case volumes across months
+
+<Tip>
+Monthly trend data helps law firm managers make informed decisions about staffing needs and capacity planning.
+</Tip>
+
+### Integrated Calendar View
+
+The dashboard includes an embedded calendar powered by **FullCalendar.js** that displays:
+
+- General activities (Actividad)
+- Case activities (ActividadCaso) - with case number
+- Expediente activities (ActividadConciliacion) - with expediente number
+
+Each activity shows:
+- **Title** - The activity name
+- **Date and time** - When the activity is scheduled
+- **Associated record** - Case or expediente number (where applicable)
+
+<Info>
+The calendar provides a unified view of all scheduled activities across your entire practice, helping you stay organized and never miss important deadlines.
+</Info>
+
+## Dashboard Statistics
+
+The dashboard aggregates data from multiple sources:
+
+| Metric | Data Source | Calculation |
+|--------|-------------|-------------|
+| Total Clients | `Cliente` model | `Cliente::count()` |
+| Total Expedientes | `Expedientes` model | `Expedientes::count()` |
+| Total Cases | `Casos` model | `Casos::count()` |
+| Total Users | `User` model | `User::count()` |
+| Female Clients | `Cliente` model | `where('genero', 'Femenino')` |
+| Male Clients | `Cliente` model | `where('genero', 'Masculino')` |
+
+## Monthly Analytics
+
+### Expedientes by Month
+
+Displays the count of expedientes created each month in the current year:
+
+```php
+Expedientes::select(DB::raw("COUNT(*) as count"), DB::raw("MONTHNAME(created_at) as month_name"))
+    ->whereYear('created_at', date('Y'))
+    ->groupBy(DB::raw("month_name"))
+    ->orderBy('id','ASC')
+    ->pluck('count', 'month_name');
+```
+
+### Cases by Month
+
+Shows the count of legal cases created each month in the current year:
+
+```php
+Casos::select(DB::raw("COUNT(*) as count"), DB::raw("MONTHNAME(created_at) as month_name"))
+    ->whereYear('created_at', date('Y'))
+    ->groupBy(DB::raw("month_name"))
+    ->orderBy('id','ASC')
+    ->pluck('count', 'month_name');
+```
+
+## Calendar Events Integration
+
+The dashboard calendar aggregates events from three sources:
+
+1. **General Activities** - From `Actividad` model
+2. **Case Activities** - From `ActividadCaso` model (includes case number)
+3. **Expediente Activities** - From `ActividadConciliacion` model (includes expediente number)
+
+Each event includes:
+- Title
+- Start date/time
+- End date/time
+- Associated record identifier
+
+## Accessing the Dashboard
+
+The dashboard is available at `/dashboard` and is protected by authentication middleware:
+
+```php
+Route::middleware(['auth', 'verified'])->name('dashboard')->prefix('dashboard')->group(function() {
+    Route::get('/', [IndexController::class, 'dashboard']);
+    Route::get('/', [IndexController::class, 'dashCalendar']);
+});
+```
+
+All authenticated users can access the dashboard regardless of role.
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Monitoring Case Load">
+    Regularly review monthly trends to identify periods of high activity. Use this data to:
+    - Schedule staff time off during slower periods
+    - Plan for temporary help during busy seasons
+    - Track year-over-year growth
+  </Accordion>
+
+  <Accordion title="Calendar Management">
+    The dashboard calendar provides a high-level overview. For detailed activity management:
+    - Click on events to view details
+    - Use the dedicated calendar view for creating and editing activities
+    - Color-code activities by type for quick visual reference
+  </Accordion>
+
+  <Accordion title="Client Demographics">
+    Use demographic data to:
+    - Ensure balanced representation
+    - Tailor communication strategies
+    - Identify potential outreach opportunities
+  </Accordion>
+</AccordionGroup>
+
+## Technical Reference
+
+**Controller**: `App\Http\Controllers\Admin\IndexController.php`
+
+**Route**: `/dashboard`
+
+**Methods**:
+- `dashboard()` - Basic dashboard view
+- `dashCalendar()` - Dashboard with statistics and calendar
+
+**Dependencies**:
+- Chart.js for visualizations
+- FullCalendar.js for calendar display
+- Laravel DB facade for aggregation queries
+
+## Related Features
+
+- [Calendar & Activities](/features/calendar-activities) - Detailed activity management
+- [Client Management](/features/client-management) - Managing client records
+- [Case Management](/features/case-management) - Working with legal cases
+- [Conciliation Process](/features/conciliation-process) - Managing expedientes
